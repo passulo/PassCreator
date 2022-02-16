@@ -16,8 +16,10 @@ object Main extends App {
   val privateKey = CryptoHelper.privateKeyFromFile(pkFile)
 
   println("Loading public key…")
-  val pubkFile  = getClass.getResource(config.keys.publicKey).getPath
-  val publicKey = CryptoHelper.publicKeyFromFile(pubkFile)
+  val pubkFile            = getClass.getResource(config.keys.publicKey).getPath
+  val publicKey           = CryptoHelper.publicKeyFromFile(pubkFile)
+  val publicKeyIdentifier = publicKey.map(_.getPoint.getY.toString).get.take(5)
+  println(s"Identifier for this key: $publicKeyIdentifier")
 
   println("Loading Apple Developer certificate from keystore…")
   val keyStorePath = getClass.getResource(config.keys.keystore).getPath
@@ -37,7 +39,7 @@ object Main extends App {
 
   members.foreach { member =>
     println(s"Creating pass for: ${member.fullName}…")
-    val pass                         = Passkit.pass(member, privateKey, config)
+    val pass                         = Passkit.pass(member, privateKey, publicKeyIdentifier, config)
     val signedAndZippedPkPassArchive = Passkit4S.createSignedAndZippedPkPassArchive(pass, templateFolder, signingInformation)
     val filename                     = "out/" + member.filename + ".pkpass"
     Files.write(Paths.get(filename), signedAndZippedPkPassArchive)

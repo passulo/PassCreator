@@ -20,7 +20,8 @@ lazy val pasetoDependencies = Seq(
   "dev.paseto" % "jpaseto-api"           % "0.7.0",
   "dev.paseto" % "jpaseto-impl"          % "0.7.0" % "runtime",
   "dev.paseto" % "jpaseto-jackson"       % "0.7.0" % "runtime",
-  "dev.paseto" % "jpaseto-bouncy-castle" % "0.7.0"
+  "dev.paseto" % "jpaseto-bouncy-castle" % "0.7.0",
+  "com.desmondyeung.hashing" %% "scala-hashing" % "0.1.0"
 )
 lazy val passkitDependencies = Seq(
   "de.brendamour" % "jpasskit" % "0.2.0"

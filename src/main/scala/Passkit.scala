@@ -27,8 +27,8 @@ object Passkit {
       .backField(PKField.builder().key("validUntil").label("Gültig bis").value(ShortDateString(passInfo.validUntil)).build())
   }
 
-  def barcode(passInfo: PassInfo, qrCodeSigningKey: PrivateKey, settings: Settings): PKBarcodeBuilder = {
-    val token = Passulo.tokenFrom(passInfo, qrCodeSigningKey, settings.name)
+  def barcode(passInfo: PassInfo, qrCodeSigningKey: PrivateKey, publicKeyIdentifier: String, settings: Settings): PKBarcodeBuilder = {
+    val token = Passulo.tokenFrom(passInfo, qrCodeSigningKey, publicKeyIdentifier, settings.name)
     PKBarcode
       .builder()
       .format(PKBarcodeFormat.PKBarcodeFormatQR)
@@ -36,10 +36,10 @@ object Passkit {
       .messageEncoding(StandardCharsets.ISO_8859_1)
   } // used by most scanners, according to Apple docs
 
-  def pass(passInfo: PassInfo, qrCodeSigningKey: PrivateKey, config: Config): PKPass = PKPass
+  def pass(passInfo: PassInfo, qrCodeSigningKey: PrivateKey, publicKeyIdentifier: String, config: Config): PKPass = PKPass
     .builder()
     .pass(content(passInfo, config.settings.name))
-    .barcodeBuilder(barcode(passInfo, qrCodeSigningKey, config.settings))
+    .barcodeBuilder(barcode(passInfo, qrCodeSigningKey, publicKeyIdentifier, config.settings))
     .formatVersion(1)
     .passTypeIdentifier(config.settings.identifier)
     .serialNumber(passInfo.number)

@@ -49,7 +49,7 @@ object Passulo {
   def ShortDateString(date: LocalDate): String         = date.toString
   def NoneIfEmpty(string: String): Option[String]      = if (string.isBlank) None else Some(string)
 
-  def tokenFrom(info: PassInfo, privateKey: PrivateKey, association: String): String = {
+  def tokenFrom(info: PassInfo, privateKey: PrivateKey, publicKeyIdentifier: String, association: String): String = {
     // claims from https://paseto.io/rfc/ 6.1
     val token = Pasetos.V2.PUBLIC
       .builder()
@@ -71,6 +71,7 @@ object Passulo {
       //    .setAudience("digitalcluster.hamburg")
       //    .setIssuedAt(Instant.now())
       //    .setSubject("membership")
+      .setKeyId(publicKeyIdentifier)
       .compact()
 
     if (token.length > 340) {

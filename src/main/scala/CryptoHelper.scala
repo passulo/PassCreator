@@ -8,6 +8,7 @@ import org.bouncycastle.util.io.pem.PemReader
 
 import java.io.{File, FileInputStream, IOException, InputStreamReader}
 import java.security.cert.{CertificateFactory, X509Certificate}
+import java.security.interfaces.EdECPublicKey
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
 import java.security.{KeyFactory, KeyStore, PrivateKey, PublicKey, UnrecoverableKeyException}
 import java.util.{Base64, HexFormat}
@@ -21,11 +22,13 @@ import scala.util.{Failure, Success, Try}
 object CryptoHelper {
 
   /** Reads an Ed25519 public key stored in X.509 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
-  def publicKeyFromFile(path: String): PublicKey = {
+  def publicKeyFromFile(path: String): Option[EdECPublicKey] = {
     val pem        = new PemReader(new InputStreamReader(new FileInputStream(path)))
     val spec       = new X509EncodedKeySpec(pem.readPemObject().getContent)
     val keyFactory = KeyFactory.getInstance("ed25519", "BC")
-    keyFactory.generatePublic(spec)
+    keyFactory.generatePublic(spec) match {
+      case key: EdECPublicKey => Some(key)
+    }
   }
 
   /** Reads an Ed25519 private key stored in PKCS #8 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
