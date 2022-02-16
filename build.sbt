@@ -1,10 +1,16 @@
 lazy val root = (project in file("."))
   .settings(
-    name          := "Pass Creator",
-    organization  := "Open Membership App",
-    version       := "1.0.0",
-    scalaVersion  := "2.13.8",
-    scalacOptions := scalaCompilerOptions,
+    name                 := "PassCreator",
+    normalizedName       := "pass-creator",
+    organization         := "com.passulo",
+    organizationName     := "Passulo",
+    organizationHomepage := Some(url("https://www.passulo.com")),
+    description          := "Program to create Passulo passes for a list of members",
+    scmInfo              := Some(ScmInfo(url("https://github.com/passulo/PassCreator"), "git@github.com:passulo/PassCreator.git")),
+    developers           := List(Developer("jannikarndt", "Jannik Arndt", "@jannikarndt", url("https://github.com/JannikArndt"))),
+    version              := "1.0.0",
+    scalaVersion         := "2.13.8",
+    scalacOptions        := scalaCompilerOptions,
     libraryDependencies ++= pasetoDependencies ++ passkitDependencies ++ basicDependencies ++ testDependencies ++ loggingDependencies,
     exportJars := true
   )
@@ -26,14 +32,6 @@ lazy val basicDependencies = Seq(
   "com.nrinaudo"          %% "kantan.csv-java8"   % "0.6.2",
   "com.nrinaudo"          %% "kantan.csv-generic" % "0.6.2"
 )
-
-//val circeVersion = "0.14.1"
-//
-//lazy val jsonDependencies = Seq(
-//  "io.circe"          %% "circe-core"      % circeVersion,
-//  "io.circe"          %% "circe-generic"   % circeVersion,
-//  "io.circe"          %% "circe-parser"    % circeVersion,
-//)
 
 lazy val testDependencies = Seq(
   "org.scalatest" %% "scalatest"     % "3.2.11" % Test,
