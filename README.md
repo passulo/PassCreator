@@ -98,12 +98,14 @@ The above functions have already written some configuration into `passulo.conf`.
 keys {
     private = private.pem
     public = public.pem
+    key-identifier = "uniqueName"
     keystore = keystore.p12
     password = "randomlygeneratedpassword"
+    apple-ca-cert = AppleWWDRCAG4.cer
 }
 
-settings {
-    name = "My Association"
+pass-settings {
+    association-name = "My Association"
     server = app.passulo.com
     team = "9MD9DV36EY"
     identifier = "pass.com.passulo.v1"
@@ -144,15 +146,19 @@ See https://developer.apple.com/library/archive/documentation/UserExperience/Con
 
 
 
-# Proto Definitions
+# QR Code Definitions
 
-```shell
-brew install protobuf
-brew install swift-protobuf
+The content of the QR code consist of
+
+```html
+https://app.passulo.com/
+    ?code=<base64 encoded token>
+    &sig=<base64 encoded signature>
+    &kid=<keyid>
 ```
 
-Scala: https://github.com/scalapb/ScalaPB/releases
+The token itself is defined as protobuf in https://github.com/passulo/Token. There you also find bindings for many languages.
 
-```shell
-protoc --objc_out=. --java_out=src/main/java --swift_out=. src/main/protobuf/token.proto --plugin=/Users/jannik.arndt/Downloads/protoc-gen-scala --scala_out=src/main/scala
-```
+The signature is created over the byte-encoded token from an Ed25519 private key that belongs to the association that issues the pass.
+
+The key-id can be used to download the public key of the issuer from the given domain. Use this public key to verify the signature.
