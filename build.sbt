@@ -8,6 +8,7 @@ lazy val root = (project in file("."))
     description          := "Program to create Passulo passes for a list of members",
     scmInfo              := Some(ScmInfo(url("https://github.com/passulo/PassCreator"), "git@github.com:passulo/PassCreator.git")),
     developers           := List(Developer("jannikarndt", "Jannik Arndt", "@jannikarndt", url("https://github.com/JannikArndt"))),
+    maintainer           := "mail@passulo.com",
     version              := "1.0.0",
     scalaVersion         := "2.13.8",
     scalacOptions        := scalaCompilerOptions,
