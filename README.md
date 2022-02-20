@@ -27,11 +27,11 @@ $ passulo register --name "My Association" --server app.passulo.com
 
 The public key alone doesn't _mean_ anything. It has to be tied to your association, so that a server can answer: "Yes, this pass has been signed by someone from 'My Association'". Technically, anyone can write the name of your association into a pass, but only passes signed by you will receive a green checkmark from the server.
 
-Unfortunately, this has to be a manual process. Otherwise, a hacker could register a _very similar looking_ association (see https://en.wikipedia.org/wiki/Typosquatting). 
+Unfortunately, this has to be a manual process. Otherwise, a hacker could register a _very similar looking_ association (see https://en.wikipedia.org/wiki/Typosquatting).
 
 #### Trust
 
-The human who controls the Passulo-server that you are using has to enter the connection between you and your association. Therefore, 
+The human who controls the Passulo-server that you are using has to enter the connection between you and your association. Therefore,
 
 * you have to trust them to not allow anyone else to claim that association,
 * clients who read the pass have to trust them to validate any identity they add.
@@ -103,9 +103,9 @@ keys {
 }
 
 settings {
-    name = "My Association" 
+    name = "My Association"
     server = app.passulo.com
-    team = "9MD9DV36EY" 
+    team = "9MD9DV36EY"
     identifier = "pass.com.passulo.v1"
 }
 
@@ -141,3 +141,18 @@ You can add two or three images to the pass, each in three resolutions ("@2x", "
 * `strip.png` is optional and is displayed behind the "primary fields", i.e. the number. Size: 375 x 123 points.
 
 See https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/PassKit_PG/Creating.html for reference.
+
+
+
+# Proto Definitions
+
+```shell
+brew install protobuf
+brew install swift-protobuf
+```
+
+Scala: https://github.com/scalapb/ScalaPB/releases
+
+```shell
+protoc --objc_out=. --java_out=src/main/java --swift_out=. src/main/protobuf/token.proto --plugin=/Users/jannik.arndt/Downloads/protoc-gen-scala --scala_out=src/main/scala
+```

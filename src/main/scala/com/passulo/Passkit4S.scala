@@ -1,3 +1,4 @@
+package com.passulo
 import de.brendamour.jpasskit.PKPass
 import de.brendamour.jpasskit.signing.{PKFileBasedSigningUtil, PKPassTemplateFolder, PKSigningInformation}
 import org.apache.commons.io.FileUtils

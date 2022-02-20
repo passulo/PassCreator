@@ -1,4 +1,5 @@
-import Passulo.{IsoDateAtMidnightString, PassInfo, ShortDateString}
+package com.passulo
+
 import de.brendamour.jpasskit.enums.PKDateStyle.*
 import de.brendamour.jpasskit.enums.{PKBarcodeFormat, PKPassType}
 import de.brendamour.jpasskit.passes.{PKGenericPass, PKGenericPassBuilder}
@@ -6,9 +7,11 @@ import de.brendamour.jpasskit.{PKBarcode, PKBarcodeBuilder, PKField, PKPass}
 
 import java.net.URL
 import java.nio.charset.StandardCharsets
-import java.security.PrivateKey
+import java.time.{LocalDate, ZoneId}
 
 object Passkit {
+  def IsoDateAtMidnightString(date: LocalDate): String = date.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant.toString
+  def ShortDateString(date: LocalDate): String         = date.toString
 
   def content(passInfo: PassInfo, association: String): PKGenericPassBuilder = {
     val validUntil = IsoDateAtMidnightString(passInfo.validUntil)
@@ -27,29 +30,28 @@ object Passkit {
       .backField(PKField.builder().key("validUntil").label("Gültig bis").value(ShortDateString(passInfo.validUntil)).build())
   }
 
-  def barcode(passInfo: PassInfo, qrCodeSigningKey: PrivateKey, publicKeyIdentifier: String, settings: Settings): PKBarcodeBuilder = {
-    val token = Passulo.tokenFrom(passInfo, qrCodeSigningKey, publicKeyIdentifier, settings.name)
+  def barcode(qrCodeContent: String): PKBarcodeBuilder =
     PKBarcode
       .builder()
       .format(PKBarcodeFormat.PKBarcodeFormatQR)
-      .message(settings.server + "?code=" + token)
+      .message(qrCodeContent)
       .messageEncoding(StandardCharsets.ISO_8859_1)
-  } // used by most scanners, according to Apple docs
+  // used by most scanners, according to Apple docs
 
-  def pass(passInfo: PassInfo, qrCodeSigningKey: PrivateKey, publicKeyIdentifier: String, config: Config): PKPass = PKPass
+  def pass(passInfo: PassInfo, qrCodeContent: String, config: Config): PKPass = PKPass
     .builder()
-    .pass(content(passInfo, config.settings.name))
-    .barcodeBuilder(barcode(passInfo, qrCodeSigningKey, publicKeyIdentifier, config.settings))
+    .pass(content(passInfo, config.passSettings.associationName))
+    .barcodeBuilder(barcode(qrCodeContent))
     .formatVersion(1)
-    .passTypeIdentifier(config.settings.identifier)
+    .passTypeIdentifier(config.passSettings.identifier)
     .serialNumber(passInfo.number)
-    .teamIdentifier(config.settings.team)
+    .teamIdentifier(config.passSettings.team)
     .organizationName("Passulo")
     .description("$DESCRIPTION") // TODO i18n
     .backgroundColor(config.colors.backgroundColor)
     .foregroundColor(config.colors.foregroundColor)
     .labelColor(config.colors.labelColor)
-    .webServiceURL(new URL(config.settings.server + "passes/"))
+    .webServiceURL(new URL(config.passSettings.server + "passes/"))
     .authenticationToken("vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc") // min 16 chars
     .appLaunchURL("passulo://")
     .associatedStoreIdentifier(1609117532)

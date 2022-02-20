@@ -1,17 +1,12 @@
-import org.bouncycastle.asn1.DEROctetString
-import org.bouncycastle.asn1.edec.EdECObjectIdentifiers
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
-import org.bouncycastle.asn1.x509.{AlgorithmIdentifier, SubjectPublicKeyInfo}
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.util.Arrays
-import org.bouncycastle.util.io.pem.PemReader
+package com.passulo
 
-import java.io.{File, FileInputStream, IOException, InputStreamReader}
+import java.io.{File, FileInputStream, IOException}
 import java.security.cert.{CertificateFactory, X509Certificate}
 import java.security.interfaces.EdECPublicKey
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
-import java.security.{KeyFactory, KeyStore, PrivateKey, PublicKey, UnrecoverableKeyException}
-import java.util.{Base64, HexFormat}
+import java.security.{KeyFactory, KeyStore, PrivateKey, UnrecoverableKeyException}
+import java.util.Base64
+import scala.io.Source
 import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success, Try}
 
@@ -23,9 +18,11 @@ object CryptoHelper {
 
   /** Reads an Ed25519 public key stored in X.509 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
   def publicKeyFromFile(path: String): Option[EdECPublicKey] = {
-    val pem        = new PemReader(new InputStreamReader(new FileInputStream(path)))
-    val spec       = new X509EncodedKeySpec(pem.readPemObject().getContent)
-    val keyFactory = KeyFactory.getInstance("ed25519", "BC")
+    val file             = Source.fromFile(path)
+    val encodedKeyString = file.getLines().filterNot(_.startsWith("----")).mkString("")
+    val keyBytes         = Base64.getDecoder.decode(encodedKeyString)
+    val spec             = new X509EncodedKeySpec(keyBytes)
+    val keyFactory       = KeyFactory.getInstance("ed25519")
     keyFactory.generatePublic(spec) match {
       case key: EdECPublicKey => Some(key)
     }
@@ -33,9 +30,11 @@ object CryptoHelper {
 
   /** Reads an Ed25519 private key stored in PKCS #8 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
   def privateKeyFromFile(path: String): PrivateKey = {
-    val pem        = new PemReader(new InputStreamReader(new FileInputStream(path)))
-    val spec       = new PKCS8EncodedKeySpec(pem.readPemObject().getContent)
-    val keyFactory = KeyFactory.getInstance("ed25519", "BC")
+    val file             = Source.fromFile(path)
+    val encodedKeyString = file.getLines().filterNot(_.startsWith("----")).mkString("")
+    val keyBytes         = Base64.getDecoder.decode(encodedKeyString)
+    val spec             = new PKCS8EncodedKeySpec(keyBytes)
+    val keyFactory       = KeyFactory.getInstance("ed25519")
     keyFactory.generatePrivate(spec)
   }
 
@@ -55,6 +54,9 @@ object CryptoHelper {
              case Failure(e: IOException) if e.getCause.isInstanceOf[UnrecoverableKeyException] =>
                println("Wrong password for Keystore")
                None
+             case Failure(exception) =>
+               println(s"Error getting private key or certificate from keystore: ${exception.getMessage}")
+               None
              case Success(value) => Some(value)
            }
       (privateKey, cert) <- extractCertificateWithKey(keystore, password)
@@ -63,7 +65,7 @@ object CryptoHelper {
   /** Reads an X.509 Certificate from a file */
   def certificateFromFile(certPath: String): Option[X509Certificate] =
     getFileInputStream(certPath).flatMap { inputStream =>
-      CertificateFactory.getInstance("X.509", "BC").generateCertificate(inputStream) match {
+      CertificateFactory.getInstance("X.509").generateCertificate(inputStream) match {
         case cert: X509Certificate if Try(cert.checkValidity()).isSuccess => Some(cert)
         case _                                                            => None
       }
@@ -85,43 +87,5 @@ object CryptoHelper {
     if (file.exists()) {
       Some(new FileInputStream(file))
     } else None
-  }
-}
-
-/** These used to make sense at some point, I don't remember why
-  */
-object CustomCryptoHackingDontUse {
-
-  /** Reads an Ed25519 public key stored in X.509 Encoding (base64)
-    *
-    * Example: publicKeyFromBase64("MCowBQYDK2VwAyEAJuHkcaByMosGmA5LJfoSbkPaJ/YZ4eICEsDwwLRtN+I=")
-    */
-  def publicKeyFromBase64(base64String: String): PublicKey = publicKeyFromBytes(Base64.getDecoder.decode(base64String))
-
-  /** Reads an Ed25519 public key stored in Hex Encoding
-    *
-    * Example: publicKeyFromHex("1eb9dbbbbc047c03fd70604e0071f0987e16b28b757225c11f00415d0e20b1a2")
-    */
-  def publicKeyFromHex(hex: String): PublicKey = publicKeyFromBytes(HexFormat.of().parseHex(hex))
-
-  /** Extracts some magic bytes from the public key to… get a public key. */
-  def publicKeyFromBytes(bytes: Array[Byte]): PublicKey = {
-    val keyBytes  = Arrays.copyOfRange(bytes, 12, bytes.length)
-    val algorithm = new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519)
-    val keyInfo   = new SubjectPublicKeyInfo(algorithm, keyBytes)
-    BouncyCastleProvider.getPublicKey(keyInfo)
-  }
-
-  def privateKeyFromBase64(base64String: String): PrivateKey = privateKeyFromBytes(Base64.getDecoder.decode(base64String))
-
-  /** privateKeyFromHex("b4cbfb43df4ce210727d953e4a713307fa19bb7d9f85041438d9e11b942a37741eb9dbbbbc047c03fd70604e0071f0987e16b28b757225c11f00415d0e20b1a2")
-    */
-  def privateKeyFromHex(hex: String): PrivateKey = privateKeyFromBytes(HexFormat.of().parseHex(hex))
-
-  def privateKeyFromBytes(bytes: Array[Byte]): PrivateKey = {
-    val privateBytes = Arrays.copyOfRange(bytes, 16, 48)
-    val algorithm    = new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519)
-    val keyInfo      = new PrivateKeyInfo(algorithm, new DEROctetString(privateBytes))
-    BouncyCastleProvider.getPrivateKey(keyInfo)
   }
 }

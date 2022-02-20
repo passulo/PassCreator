@@ -11,27 +11,17 @@ lazy val root = (project in file("."))
     version              := "1.0.0",
     scalaVersion         := "2.13.8",
     scalacOptions        := scalaCompilerOptions,
-    libraryDependencies ++= pasetoDependencies ++ passkitDependencies ++ basicDependencies ++ testDependencies ++ loggingDependencies,
-    exportJars := true
+    libraryDependencies ++= dependencies ++ testDependencies ++ loggingDependencies
   )
   .enablePlugins(JavaAppPackaging)
 
-lazy val pasetoDependencies = Seq(
-  "dev.paseto" % "jpaseto-api"           % "0.7.0",
-  "dev.paseto" % "jpaseto-impl"          % "0.7.0" % "runtime",
-  "dev.paseto" % "jpaseto-jackson"       % "0.7.0" % "runtime",
-  "dev.paseto" % "jpaseto-bouncy-castle" % "0.7.0",
-  "com.desmondyeung.hashing" %% "scala-hashing" % "0.1.0"
-)
-lazy val passkitDependencies = Seq(
-  "de.brendamour" % "jpasskit" % "0.2.0"
-)
-
-lazy val basicDependencies = Seq(
+lazy val dependencies = Seq(
+  "de.brendamour"          % "jpasskit"           % "0.2.0",
   "com.github.pureconfig" %% "pureconfig"         % "0.17.1",
   "com.nrinaudo"          %% "kantan.csv"         % "0.6.2",
   "com.nrinaudo"          %% "kantan.csv-java8"   % "0.6.2",
-  "com.nrinaudo"          %% "kantan.csv-generic" % "0.6.2"
+  "com.nrinaudo"          %% "kantan.csv-generic" % "0.6.2",
+  "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.8"
 )
 
 lazy val testDependencies = Seq(
