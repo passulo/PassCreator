@@ -1,36 +1,33 @@
 package com.passulo
 
 import de.brendamour.jpasskit.signing.PKSigningInformation
+import pureconfig.ConfigSource
+import pureconfig.generic.auto.*
 
 import java.nio.file.{Files, Paths}
 
 object Main extends App {
   println("Loading configuration from 'passulo.conf'…")
-  val config = Config.load
+  val config = ConfigSource.resources("passulo.conf").loadOrThrow[Config]
 
   println("Loading private key…")
-  val pkFile     = getClass.getClassLoader.getResource(config.keys.privateKey).getPath
-  val privateKey = CryptoHelper.privateKeyFromFile(pkFile)
+  val privateKey = CryptoHelper.privateKeyFromFile(config.keys.privateKey)
 
   println("Loading public key…")
-  val pubkFile  = getClass.getClassLoader.getResource(config.keys.publicKey).getPath
-  val publicKey = CryptoHelper.publicKeyFromFile(pubkFile)
+  val publicKey = CryptoHelper.publicKeyFromFile(config.keys.publicKey)
 
   println("Loading Apple Developer certificate from keystore…")
-  val keyStorePath = getClass.getClassLoader.getResource(config.keys.keystore).getPath
-  val (key, cert)  = CryptoHelper.privateKeyAndCertFromKeystore(keyStorePath, config.keys.password).get
+  val (key, cert) = CryptoHelper.privateKeyAndCertFromKeystore(config.keys.keystore, config.keys.password).get
 
   println("Loading Apple WWDR CA…")
-  val appleWWDRCA = getClass.getClassLoader.getResource(config.keys.appleCaCert).getPath
-  val appleCert   = CryptoHelper.certificateFromFile(appleWWDRCA).get
+  val appleCert = CryptoHelper.certificateFromFile(config.keys.appleCaCert).get
 
   val signingInformation = new PKSigningInformation(cert, key, appleCert)
 
-  val templateFolder = getClass.getClassLoader.getResource("template").getPath
+  val templateFolder = Paths.get("template/").toAbsolutePath.toString
 
   println(s"Loading Members from ${config.input.csv}")
-  val membersPath = getClass.getClassLoader.getResource(config.input.csv).getPath
-  val members     = PassInfo.readFromCsv(membersPath)
+  val members = PassInfo.readFromCsv(config.input.csv)
 
   members.foreach { member =>
     println(s"Creating pass for: ${member.fullName}…")

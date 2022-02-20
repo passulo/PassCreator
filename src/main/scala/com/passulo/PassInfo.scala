@@ -6,7 +6,6 @@ import kantan.csv.java8.*
 import kantan.csv.ops.*
 import kantan.csv.rfc
 
-import java.io.File
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 
@@ -48,7 +47,7 @@ object PassInfo {
   def NoneIfEmpty(string: String): Option[String] = if (string.isBlank) None else Some(string)
 
   def readFromCsv(file: String): Iterable[PassInfo] =
-    new File(file).asCsvReader[PassInfo](rfc.withHeader).toIterable.flatMap {
+    Thread.currentThread().getContextClassLoader.getResource(file).asCsvReader[PassInfo](rfc.withHeader).toIterable.flatMap {
       case Left(value) =>
         println(s"Error reading row: $value")
         None

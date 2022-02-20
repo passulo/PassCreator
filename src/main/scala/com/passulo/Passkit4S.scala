@@ -1,10 +1,12 @@
 package com.passulo
+
 import de.brendamour.jpasskit.PKPass
 import de.brendamour.jpasskit.signing.{PKFileBasedSigningUtil, PKPassTemplateFolder, PKSigningInformation}
 import org.apache.commons.io.FileUtils
 
 import java.io.File
 import java.nio.file.{Files, Path}
+
 object Passkit4S {
 
   def createSignedAndZippedPkPassArchive(pass: PKPass, templateFolder: String, pkSigningInformation: PKSigningInformation): Array[Byte] = {

@@ -1,10 +1,4 @@
 package com.passulo
-import pureconfig.*
-import pureconfig.generic.auto.*
-
-object Config {
-  def load: Config = ConfigSource.resources("passulo.conf").loadOrThrow[Config]
-}
 
 case class Config(keys: Keys, input: Input, passSettings: PassSettings, colors: Colors, ios: ios)
 
