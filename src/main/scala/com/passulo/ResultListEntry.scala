@@ -2,7 +2,6 @@ package com.passulo
 
 import kantan.csv.CsvConfiguration
 import kantan.csv.generic.*
-import kantan.csv.java8.*
 import kantan.csv.ops.*
 
 import java.io.File

@@ -3,8 +3,8 @@ import com.passulo.token.Token
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import java.security.KeyFactory
 import java.security.spec.PKCS8EncodedKeySpec
-import java.security.{KeyFactory, KeyPairGenerator}
 import java.time.LocalDate
 import java.util.Base64
 
@@ -29,7 +29,7 @@ class PassuloTest extends AnyWordSpec with Matchers {
         memberSince = LocalDate.of(2015, 1, 1)
       )
       val associationName = "Passulo Test Assoc."
-      val passId = "randomId"
+      val passId          = "randomId"
 
       // when
       val tokenBytes = Passulo.createTokenBytes(passInfo, passId, associationName)
