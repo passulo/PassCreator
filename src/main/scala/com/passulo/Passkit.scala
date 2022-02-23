@@ -29,7 +29,7 @@ object Passkit {
 
   def content_plain(passInfo: PassInfo): PKGenericPassBuilder = {
     val validFrom = IsoDateAtMidnightString(passInfo.memberSince)
-    PKGenericPass
+    val pass = PKGenericPass
       .builder()
       .passType(PKPassType.PKGenericPass)
       .headerField(PKField.builder().key("validity").label("Gültig ab").value(validFrom).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
@@ -37,7 +37,11 @@ object Passkit {
       .secondaryField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
       .secondaryField(PKField.builder().key("number").label("Mitgliedsnummer").value(passInfo.number).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
       .auxiliaryField(PKField.builder().key("status").label("status").value(passInfo.status).build())
-      .auxiliaryField(PKField.builder().key("function").label("Funktion").value("Kassenwart").textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
+
+    if (!passInfo.role.isBlank)
+      pass.auxiliaryField(PKField.builder().key("role").label("Funktion").value(passInfo.role).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
+    else
+      pass
   }
 
   def content_strip(passInfo: PassInfo): PKGenericPassBuilder = {

@@ -22,6 +22,7 @@ class PassuloTest extends AnyWordSpec with Matchers {
         gender = "f",
         number = "123",
         status = "gold",
+        role = "bookie",
         company = "foo",
         email = "lange@foo.com",
         telephone = "1234",

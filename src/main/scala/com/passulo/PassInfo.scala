@@ -17,6 +17,7 @@ case class PassInfo(
     gender: String,
     number: String,
     status: String,
+    role: String,
     company: String,
     email: String,
     telephone: String,
