@@ -38,10 +38,10 @@ class PassuloTest extends AnyWordSpec with Matchers {
       val encodedToken = Base64.getUrlEncoder.encodeToString(tokenBytes)
 
       // must remain stable
-      encodedToken shouldBe "CgZmb29iYXISBVRhbmphIgVMYW5nZSoBZjIDMTIzOgRnb2xkQgNmb29KDWxhbmdlQGZvby5jb21SBDEyMzRaE1Bhc3N1bG8gVGVzdCBBc3NvYy5iBgj_mcOdBmoGCP--l6UF"
+      encodedToken shouldBe "CghyYW5kb21JZBIFVGFuamEiBUxhbmdlKAEyAzEyMzoEZ29sZEIDZm9vSg1sYW5nZUBmb28uY29tUgQxMjM0WhNQYXNzdWxvIFRlc3QgQXNzb2MuYgYI_5nDnQZqBgj_vpelBQ=="
 
       val parsed = Token.parseFrom(Base64.getUrlDecoder.decode(encodedToken))
-      parsed.id shouldBe "foobar"
+      parsed.id shouldBe passId
       parsed.firstName shouldBe "Tanja"
     }
 

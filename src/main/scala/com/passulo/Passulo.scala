@@ -47,7 +47,6 @@ object Passulo {
       validUntil = Some(Timestamp.of(info.validUntil.toEpochSecond(LocalTime.MAX, ZoneOffset.UTC), nanos = 0)),
       memberSince = Some(Timestamp.of(info.memberSince.toEpochSecond(LocalTime.MAX, ZoneOffset.UTC), nanos = 0))
     )
-    println(s"Token length: ${token.toByteArray.length} bytes")
     token.toByteArray
   }
 
@@ -55,8 +54,6 @@ object Passulo {
     val signature: Signature = Signature.getInstance("Ed25519")
     signature.initSign(privateKey)
     signature.update(tokenBytes)
-    val signatureBytes = signature.sign
-    println(s"Signature length: ${signatureBytes.length} bytes")
-    signatureBytes
+    signature.sign
   }
 }
