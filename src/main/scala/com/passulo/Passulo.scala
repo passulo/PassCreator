@@ -9,13 +9,13 @@ import java.util.Base64
 
 object Passulo {
 
-  def createUrl(info: PassInfo, privateKey: PrivateKey, publicKeyIdentifier: String, settings: PassSettings): String = {
+  def createUrl(info: PassInfo, passId: String, privateKey: PrivateKey, publicKeyIdentifier: String, settings: PassSettings): String = {
     val version = com.passulo.token.TokenProto.scalaDescriptor.packageName match {
       case "com.passulo.v1" => 1
       case other            => throw new RuntimeException(s"Unsupported Protobuf version for token: $other")
     }
 
-    val tokenBytes       = createTokenBytes(info, settings.associationName)
+    val tokenBytes       = createTokenBytes(info, passId, settings.associationName)
     val tokenEncoded     = Base64.getUrlEncoder.encodeToString(tokenBytes)
     val signature        = signToken(tokenBytes, privateKey)
     val signatureEncoded = Base64.getUrlEncoder.encodeToString(signature)
@@ -24,7 +24,8 @@ object Passulo {
     url
   }
 
-  def createTokenBytes(info: PassInfo, association: String): Array[Byte] = {
+  def createTokenBytes(info: PassInfo, passId: String, association: String): Array[Byte] = {
+
     val gender = info.gender match {
       case "m" | "male"          => Gender.male
       case "f" | "female"        => Gender.female
@@ -32,7 +33,7 @@ object Passulo {
       case other                 => println(s"Cannot map gender $other!"); Gender.undefined
     }
     val token = Token(
-      id = info.id,
+      id = passId,
       firstName = info.firstName,
       middleName = info.middleName,
       lastName = info.lastName,

@@ -13,7 +13,7 @@ object Passkit {
   def IsoDateAtMidnightString(date: LocalDate): String = date.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant.toString
   def ShortDateString(date: LocalDate): String         = date.toString
 
-  def content(passInfo: PassInfo, association: String): PKGenericPassBuilder = {
+  def content(passInfo: PassInfo, passId: String, association: String): PKGenericPassBuilder = {
     val validUntil = IsoDateAtMidnightString(passInfo.validUntil)
     PKGenericPass
       .builder()
@@ -28,6 +28,7 @@ object Passkit {
       .backField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
       .backField(PKField.builder().key("since").label("Mitglied seit").value(ShortDateString(passInfo.memberSince)).build())
       .backField(PKField.builder().key("validUntil").label("Gültig bis").value(ShortDateString(passInfo.validUntil)).build())
+      .backField(PKField.builder().key("passId").label("Pass ID").value(passId).build())
   }
 
   def barcode(qrCodeContent: String): PKBarcodeBuilder =
@@ -47,9 +48,9 @@ object Passkit {
         .build()
     }
 
-  def pass(passInfo: PassInfo, qrCodeContent: String, config: Config): PKPass = PKPass
+  def pass(passInfo: PassInfo, passId: String, qrCodeContent: String, config: Config): PKPass = PKPass
     .builder()
-    .pass(content(passInfo, config.passSettings.associationName))
+    .pass(content(passInfo, passId, config.passSettings.associationName))
     .barcodeBuilder(barcode(qrCodeContent))
     .beacons(beacons(config.beacons).asJava)
     .formatVersion(1)

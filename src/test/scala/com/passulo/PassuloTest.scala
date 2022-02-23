@@ -29,9 +29,10 @@ class PassuloTest extends AnyWordSpec with Matchers {
         memberSince = LocalDate.of(2015, 1, 1)
       )
       val associationName = "Passulo Test Assoc."
+      val passId = "randomId"
 
       // when
-      val tokenBytes = Passulo.createTokenBytes(passInfo, associationName)
+      val tokenBytes = Passulo.createTokenBytes(passInfo, passId, associationName)
 
       // then
       val encodedToken = Base64.getUrlEncoder.encodeToString(tokenBytes)

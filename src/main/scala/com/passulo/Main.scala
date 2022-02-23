@@ -29,15 +29,17 @@ object Main extends App {
   println(s"Loading Members from ${config.input.csv}")
   val members = PassInfo.readFromCsv(config.input.csv)
 
-  members.foreach { member =>
-    println(s"Creating pass for: ${member.fullName}…")
-    val qrCodeContent                = Passulo.createUrl(member, privateKey, config.keys.keyIdentifier, config.passSettings)
-    val pass                         = Passkit.pass(member, qrCodeContent, config)
+  val results = members.map { member =>
+    val passId = NanoID.create()
+    println(s"Creating pass for: ${member.fullName} (id=$passId)…")
+    val qrCodeContent                = Passulo.createUrl(member, passId, privateKey, config.keys.keyIdentifier, config.passSettings)
+    val pass                         = Passkit.pass(member, passId, qrCodeContent, config)
     val signedAndZippedPkPassArchive = Passkit4S.createSignedAndZippedPkPassArchive(pass, templateFolder, signingInformation)
-    val filename                     = "out/" + member.filename + ".pkpass"
+    val filename                     = s"out/$passId-${member.filename}.pkpass"
     Files.write(Paths.get(filename), signedAndZippedPkPassArchive)
     println(s"Written to $filename")
-
+    ResultListEntry.from(passId, member)
   }
 
+  ResultListEntry.write(results.toSeq, "out/_results.csv")
 }
