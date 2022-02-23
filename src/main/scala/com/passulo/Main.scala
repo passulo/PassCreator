@@ -36,6 +36,7 @@ object Main extends App {
     val pass                         = Passkit.pass(member, passId, qrCodeContent, config)
     val signedAndZippedPkPassArchive = Passkit4S.createSignedAndZippedPkPassArchive(pass, templateFolder, signingInformation)
     val filename                     = s"out/$passId-${member.filename}.pkpass"
+    Files.createDirectories(Paths.get(filename).getParent)
     Files.write(Paths.get(filename), signedAndZippedPkPassArchive)
     println(s"Written to $filename")
     ResultListEntry.from(passId, member)
