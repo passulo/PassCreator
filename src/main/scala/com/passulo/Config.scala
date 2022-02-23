@@ -1,6 +1,6 @@
 package com.passulo
 
-case class Config(keys: Keys, input: Input, passSettings: PassSettings, colors: Colors, ios: ios)
+case class Config(keys: Keys, input: Input, passSettings: PassSettings, colors: Colors, ios: ios, beacons: Seq[Beacon])
 
 case class Input(csv: String)
 
@@ -20,3 +20,5 @@ case class Colors(
 )
 
 case class ios(associatedApp: Array[String])
+
+case class Beacon(uuid: String, text: String)
