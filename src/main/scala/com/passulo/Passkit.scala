@@ -1,7 +1,7 @@
 package com.passulo
 
 import de.brendamour.jpasskit.enums.PKDateStyle.*
-import de.brendamour.jpasskit.enums.{PKBarcodeFormat, PKPassType}
+import de.brendamour.jpasskit.enums.{PKBarcodeFormat, PKPassType, PKTextAlignment}
 import de.brendamour.jpasskit.passes.{PKGenericPass, PKGenericPassBuilder}
 import de.brendamour.jpasskit.*
 
@@ -13,22 +13,55 @@ object Passkit {
   def IsoDateAtMidnightString(date: LocalDate): String = date.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant.toString
   def ShortDateString(date: LocalDate): String         = date.toString
 
-  def content(passInfo: PassInfo, passId: String, association: String): PKGenericPassBuilder = {
-    val validUntil = IsoDateAtMidnightString(passInfo.validUntil)
+  def content(passInfo: PassInfo, passId: String, association: String): PKGenericPassBuilder =
+    passInfo.template match {
+      case "thumb"                      => content_thumb(passInfo).backFields(backfields(passInfo, passId, association).asJava)
+      case "silver" | "gold" | "platin" => content_strip(passInfo).backFields(backfields(passInfo, passId, association).asJava)
+      case _                            => content_plain(passInfo).backFields(backfields(passInfo, passId, association).asJava)
+    }
+
+  def backfields(passInfo: PassInfo, passId: String, association: String): Seq[PKField] = Seq(
+    PKField.builder().key("name").label("Ausgestellt an").value(passInfo.fullName).build(),
+    PKField.builder().key("company").label("Firma").value(passInfo.company).build(),
+    PKField.builder().key("association").value(s"Verband: $association\nMitgliedsnummer: ${passInfo.number}\nMitglied seit: ${ShortDateString(passInfo.memberSince)}").build(),
+    PKField.builder().key("passId").label("Pass").value(s"ID: $passId\nErstellt am ${ShortDateString(LocalDate.now())}").build()
+  )
+
+  def content_plain(passInfo: PassInfo): PKGenericPassBuilder = {
+    val validFrom = IsoDateAtMidnightString(passInfo.memberSince)
+    PKGenericPass
+      .builder()
+      .passType(PKPassType.PKGenericPass)
+      .headerField(PKField.builder().key("validity").label("Gültig ab").value(validFrom).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
+      .primaryField(PKField.builder().key("name").value(passInfo.fullName).build())
+      .secondaryField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
+      .secondaryField(PKField.builder().key("number").label("Mitgliedsnummer").value(passInfo.number).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
+      .auxiliaryField(PKField.builder().key("status").label("status").value(passInfo.status).build())
+      .auxiliaryField(PKField.builder().key("function").label("Funktion").value("Kassenwart").textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
+  }
+
+  def content_strip(passInfo: PassInfo): PKGenericPassBuilder = {
+    val validFrom = IsoDateAtMidnightString(passInfo.memberSince)
     PKGenericPass
       .builder()
       .passType(PKPassType.PKStoreCard)
-      .headerField(PKField.builder().key("validity").label("Gültig bis").value(validUntil).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
-      .primaryField(PKField.builder().key("identifier").value(passInfo.number).build())
-      .secondaryField(PKField.builder().key("company").label(passInfo.company).value(passInfo.fullName).build())
-      .auxiliaryField(PKField.builder().key("association").label("Verband").value(association).build())
-      .auxiliaryField(PKField.builder().key("status").label("Status").value(passInfo.status).build())
-      .backField(PKField.builder().key("name").label("Ausgestellt an").value(passInfo.fullName).build())
-      .backField(PKField.builder().key("identifier").label("Mitgliedsnummer").value(passInfo.number).build())
-      .backField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
-      .backField(PKField.builder().key("since").label("Mitglied seit").value(ShortDateString(passInfo.memberSince)).build())
-      .backField(PKField.builder().key("validUntil").label("Gültig bis").value(ShortDateString(passInfo.validUntil)).build())
-      .backField(PKField.builder().key("passId").label("Pass ID").value(passId).build())
+      .headerField(PKField.builder().key("validity").label("Gültig ab").value(validFrom).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
+      .primaryField(PKField.builder().key("name").value(passInfo.fullName).build())
+      .secondaryField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
+      .secondaryField(PKField.builder().key("number").label("Mitgliedsnummer").value(passInfo.number).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
+  }
+
+  def content_thumb(passInfo: PassInfo): PKGenericPassBuilder = {
+    val validFrom = IsoDateAtMidnightString(passInfo.memberSince)
+    PKGenericPass
+      .builder()
+      .passType(PKPassType.PKGenericPass)
+      .headerField(PKField.builder().key("status").label("Status").value(passInfo.status).build())
+      .primaryField(PKField.builder().key("name").value(passInfo.fullName).build())
+      .secondaryField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
+      .secondaryField(PKField.builder().key("number").label("Mitgliedsnummer").value(passInfo.number).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
+      .auxiliaryField(PKField.builder().key("validity").label("Gültig ab").value(validFrom).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
+      .auxiliaryField(PKField.builder().key("function").label("Funktion").value("Kassenwart").textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
   }
 
   def barcode(qrCodeContent: String): PKBarcodeBuilder =

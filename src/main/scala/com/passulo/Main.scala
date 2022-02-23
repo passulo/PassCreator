@@ -24,16 +24,15 @@ object Main extends App {
 
   val signingInformation = new PKSigningInformation(cert, key, appleCert)
 
-  val templateFolder = Paths.get("template/").toAbsolutePath.toString
-
   println(s"Loading Members from ${config.input.csv}")
   val members = PassInfo.readFromCsv(config.input.csv)
 
   val results = members.map { member =>
     val passId = NanoID.create()
-    println(s"Creating pass for: ${member.fullName} (id=$passId)…")
+    println(s"Creating pass for: ${member.fullName} (id=$passId) with template '${member.templateFolder}'…")
     val qrCodeContent                = Passulo.createUrl(member, passId, privateKey, config.keys.keyIdentifier, config.passSettings)
     val pass                         = Passkit.pass(member, passId, qrCodeContent, config)
+    val templateFolder               = Paths.get(s"templates/${member.templateFolder}/").toAbsolutePath.toString
     val signedAndZippedPkPassArchive = Passkit4S.createSignedAndZippedPkPassArchive(pass, templateFolder, signingInformation)
     val filename                     = s"out/$passId-${member.filename}.pkpass"
     Files.createDirectories(Paths.get(filename).getParent)

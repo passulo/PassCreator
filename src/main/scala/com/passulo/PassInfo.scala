@@ -21,8 +21,12 @@ case class PassInfo(
     email: String,
     telephone: String,
     validUntil: LocalDate,
-    memberSince: LocalDate
+    memberSince: LocalDate,
+    template: String
 ) {
+
+  def templateFolder = if (template.isBlank) "default" else template
+
   def fullName: String =
     (pronoun, NoneIfEmpty(firstName), NoneIfEmpty(middleName), NoneIfEmpty(lastName)) match {
       case (_, Some(f), Some(m), Some(l)) => s"$f $m $l"
