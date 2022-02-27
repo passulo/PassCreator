@@ -1,10 +1,12 @@
 package com.passulo
 
 import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths, StandardOpenOption}
 import java.security.cert.{CertificateFactory, X509Certificate}
-import java.security.interfaces.EdECPublicKey
+import java.security.interfaces.{EdECPrivateKey, EdECPublicKey}
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
-import java.security.{KeyFactory, KeyStore, PrivateKey, UnrecoverableKeyException}
+import java.security.*
 import java.util.Base64
 import scala.io.Source
 import scala.jdk.CollectionConverters.*
@@ -15,6 +17,46 @@ import scala.util.{Failure, Success, Try}
   * helpful: https://www.baeldung.com/java-read-pem-file-keys helpful: https://www.tbray.org/ongoing/When/202x/2021/04/19/PKI-Detective
   */
 object CryptoHelper {
+
+  def generateKeyPair(overwrite: Boolean, privateFile: String = "private.pem", publicFile: String = "public.pem"): Either[String, Success.type] = {
+    val generator = KeyPairGenerator.getInstance("ed25519")
+    val keypair   = generator.generateKeyPair()
+    val publicKey = keypair.getPublic match {
+      case publicKey: EdECPublicKey =>
+        val encoded = Base64.getEncoder.encodeToString(publicKey.getEncoded)
+        s"""-----BEGIN PUBLIC KEY-----
+           |$encoded
+           |-----END PUBLIC KEY-----""".stripMargin
+    }
+    val privateKey = keypair.getPrivate match {
+      case privateKey: EdECPrivateKey =>
+        val encoded = Base64.getEncoder.encodeToString(privateKey.getEncoded)
+        s"""-----BEGIN PRIVATE KEY-----
+           |$encoded
+           |-----END PRIVATE KEY-----""".stripMargin
+    }
+
+    for {
+      _ <- writeFile(privateFile, privateKey, overwrite)
+      _ <- writeFile(publicFile, publicKey, overwrite)
+    } yield Success
+  }
+
+  def writeFile(filename: String, text: String, overwrite: Boolean): Either[String, Success.type] = {
+    val fileExists = Paths.get(filename).toFile.exists()
+    if (fileExists && !overwrite) {
+      Left(s"File $filename already exists, and you didn't specify to overwrite it. Stopping.")
+    } else if (fileExists && overwrite) {
+      println(s"File $filename already exists, overwriting…")
+      val options = Seq(StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.DSYNC, StandardOpenOption.TRUNCATE_EXISTING)
+      Files.write(Paths.get(filename), text.getBytes(StandardCharsets.UTF_8), options*)
+      Right(Success)
+    } else {
+      val options = Seq(StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW, StandardOpenOption.DSYNC)
+      Files.write(Paths.get(filename), text.getBytes(StandardCharsets.UTF_8), options*)
+      Right(Success)
+    }
+  }
 
   /** Reads an Ed25519 public key stored in X.509 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
   def publicKeyFromFile(path: String): Option[EdECPublicKey] = {

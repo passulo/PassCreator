@@ -2,12 +2,29 @@ package com.passulo
 import com.google.protobuf.timestamp.Timestamp
 import com.passulo.token.Token
 import com.passulo.token.Token.Gender
+import de.brendamour.jpasskit.signing.PKSigningInformation
 
+import java.nio.file.{Files, Paths}
 import java.security.{PrivateKey, Signature}
 import java.time.{LocalTime, ZoneOffset}
 import java.util.Base64
 
 object Passulo {
+
+  def createPasses(members: Iterable[PassInfo], signingInformation: PKSigningInformation, privateKey: PrivateKey, config: Config): Iterable[ResultListEntry] =
+    members.map { member =>
+      val passId = NanoID.create()
+      println(s"Creating pass for: ${member.fullName} (id=$passId) with template '${member.templateFolder}'…")
+      val qrCodeContent                = Passulo.createUrl(member, passId, privateKey, config.keys.keyIdentifier, config.passSettings)
+      val pass                         = Passkit.pass(member, passId, qrCodeContent, config)
+      val templateFolder               = Paths.get(s"templates/${member.templateFolder}/").toAbsolutePath.toString
+      val signedAndZippedPkPassArchive = Passkit4S.createSignedAndZippedPkPassArchive(pass, templateFolder, signingInformation)
+      val filename                     = s"out/$passId-${member.filename}.pkpass"
+      Files.createDirectories(Paths.get(filename).getParent)
+      Files.write(Paths.get(filename), signedAndZippedPkPassArchive)
+      println(s"Written to $filename")
+      ResultListEntry.from(passId, member)
+    }
 
   def createUrl(info: PassInfo, passId: String, privateKey: PrivateKey, publicKeyIdentifier: String, settings: PassSettings): String = {
     val version = com.passulo.token.TokenProto.scalaDescriptor.packageName match {

@@ -22,7 +22,8 @@ lazy val dependencies = Seq(
   "com.nrinaudo"          %% "kantan.csv"         % "0.6.2",
   "com.nrinaudo"          %% "kantan.csv-java8"   % "0.6.2",
   "com.nrinaudo"          %% "kantan.csv-generic" % "0.6.2",
-  "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.8"
+  "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.8",
+  "info.picocli"           % "picocli"            % "4.6.3"
 )
 
 lazy val testDependencies = Seq(
@@ -57,7 +58,7 @@ lazy val scalaCompilerOptions = Seq(
   "-Xlint:doc-detached",           // A Scaladoc comment appears to be detached from its element.
   "-Xlint:inaccessible",           // Warn about inaccessible types in method signatures.
   "-Xlint:infer-any",              // Warn when a type argument is inferred to be `Any`.
-  "-Xlint:missing-interpolator",   // A string literal appears to be missing an interpolator id.
+//  "-Xlint:missing-interpolator",   // A string literal appears to be missing an interpolator id.
   "-Xlint:nullary-unit",           // Warn when nullary methods return Unit.
   "-Xlint:option-implicit",        // Option.apply used implicit view.
   "-Xlint:package-object-classes", // Class or object defined in package object.
