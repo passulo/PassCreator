@@ -22,7 +22,7 @@ lazy val dependencies = Seq(
   "com.nrinaudo"          %% "kantan.csv"         % "0.6.2",
   "com.nrinaudo"          %% "kantan.csv-java8"   % "0.6.2",
   "com.nrinaudo"          %% "kantan.csv-generic" % "0.6.2",
-  "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.8",
+  "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.9",
   "info.picocli"           % "picocli"            % "4.6.3"
 )
 
@@ -52,12 +52,12 @@ lazy val scalaCompilerOptions = Seq(
   "-unchecked",    // Enable additional warnings where generated code depends on assumptions.
   "-Xcheckinit",   // Wrap field accessors to throw an exception on uninitialized access.
 //  "-Xfatal-warnings",              // Fail the compilation if there are any warnings.
-  "-Xlint:adapted-args",           // Warn if an argument list is modified to match the receiver.
-  "-Xlint:constant",               // Evaluation of a constant arithmetic expression results in an error.
-  "-Xlint:delayedinit-select",     // Selecting member of DelayedInit.
-  "-Xlint:doc-detached",           // A Scaladoc comment appears to be detached from its element.
-  "-Xlint:inaccessible",           // Warn about inaccessible types in method signatures.
-  "-Xlint:infer-any",              // Warn when a type argument is inferred to be `Any`.
+  "-Xlint:adapted-args",       // Warn if an argument list is modified to match the receiver.
+  "-Xlint:constant",           // Evaluation of a constant arithmetic expression results in an error.
+  "-Xlint:delayedinit-select", // Selecting member of DelayedInit.
+  "-Xlint:doc-detached",       // A Scaladoc comment appears to be detached from its element.
+  "-Xlint:inaccessible",       // Warn about inaccessible types in method signatures.
+  "-Xlint:infer-any",          // Warn when a type argument is inferred to be `Any`.
 //  "-Xlint:missing-interpolator",   // A string literal appears to be missing an interpolator id.
   "-Xlint:nullary-unit",           // Warn when nullary methods return Unit.
   "-Xlint:option-implicit",        // Option.apply used implicit view.
