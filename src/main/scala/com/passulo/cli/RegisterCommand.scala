@@ -1,15 +1,16 @@
 package com.passulo.cli
 
-import com.passulo.util.CryptoHelper
+import com.passulo.util.{CryptoHelper, Http}
 import com.passulo.{Config, StdOutText}
+import io.circe.generic.auto.*
+import io.circe.syntax.*
 import picocli.CommandLine.{Command, Option}
 import pureconfig.ConfigSource
 import pureconfig.generic.auto.*
 
 import java.awt.Desktop
 import java.io.File
-import java.net.{URI, URLEncoder}
-import java.nio.charset.StandardCharsets
+import java.net.URI
 import java.util.concurrent.Callable
 
 @Command(
@@ -31,7 +32,7 @@ class RegisterCommand extends Callable[Int] {
 
   // noinspection VarCouldBeVal
   @Option(names = Array("-s", "--server"), description = Array("The server to send the registration to."))
-  var server: String = "passulo/Passulo-Server"
+  var server: String = "app.passulo.com"
 
   @Option(names = Array("--public-key"), description = Array("The public key to register."))
   var publicKeyFile: File = _
@@ -40,28 +41,24 @@ class RegisterCommand extends Callable[Int] {
     println("Loading public key…")
     val publicKeyFileRef = scala.Option(publicKeyFile).getOrElse(new File(config.keys.publicKey))
     val publicKey        = CryptoHelper.loadX509EncodedPEM(publicKeyFileRef)
+    val url              = s"https://$server/v1/key/register"
+    val payload          = RegisterKey(keyid, name, CryptoHelper.encodeAsPEM(publicKey)).asJson
+    println(s"Asking server at $url what to do…")
+    val serverCommand    = Http.post(url, payload)
 
-    val baseURI = URI.create(s"https://github.com/$server/issues/new")
-    val title   = "?title=" + URLEncoder.encode(s"New Public Key for `$name`", StandardCharsets.UTF_8)
-    val body = "&body=" + URLEncoder.encode(
-      s"""My Key-ID: `$keyid`
-         |My key:
-         |```
-         |${CryptoHelper.encodeAsPEM(publicKey)}
-         |```
-         |My association: `$name`
-         |
-         |I can verify my identity in the following way: <please enter description>""".stripMargin,
-      StandardCharsets.UTF_8
-    )
-    val url = baseURI.toURL.toString + title + body
+    val goTo = serverCommand.body()
+
+    println(s"Response: ${serverCommand.statusCode()}")
+    println(s"Response: ${serverCommand.body()}")
 
     if (Desktop.isDesktopSupported)
-      Desktop.getDesktop.browse(URI.create(url))
+      Desktop.getDesktop.browse(URI.create(goTo.stripPrefix("\"").stripSuffix("\"")))
 
     println(StdOutText.headline(s"If your browser didn't open, please open this URL yourself:"))
-    println(url)
+    println(goTo)
 
     0
   }
+
+  case class RegisterKey(keyId: String, association: String, key: String)
 }
