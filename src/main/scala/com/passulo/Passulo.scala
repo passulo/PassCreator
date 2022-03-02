@@ -5,7 +5,7 @@ import com.passulo.token.Token.Gender
 import de.brendamour.jpasskit.signing.PKSigningInformation
 
 import java.nio.file.{Files, Paths}
-import java.security.{PrivateKey, Signature}
+import java.security.PrivateKey
 import java.time.{LocalTime, ZoneOffset}
 import java.util.Base64
 
@@ -34,7 +34,7 @@ object Passulo {
 
     val tokenBytes       = createTokenBytes(info, passId, settings.associationName)
     val tokenEncoded     = Base64.getUrlEncoder.encodeToString(tokenBytes)
-    val signature        = signToken(tokenBytes, privateKey)
+    val signature        = CryptoHelper.sign(tokenBytes, privateKey)
     val signatureEncoded = Base64.getUrlEncoder.encodeToString(signature)
     val url              = s"${settings.server}?code=$tokenEncoded&v=$version&sig=$signatureEncoded&kid=$publicKeyIdentifier"
     println(s"Created URL of length ${url.length}: $url")
@@ -65,12 +65,5 @@ object Passulo {
       memberSince = Some(Timestamp.of(info.memberSince.toEpochSecond(LocalTime.MAX, ZoneOffset.UTC), nanos = 0))
     )
     token.toByteArray
-  }
-
-  def signToken(tokenBytes: Array[Byte], privateKey: PrivateKey): Array[Byte] = {
-    val signature: Signature = Signature.getInstance("Ed25519")
-    signature.initSign(privateKey)
-    signature.update(tokenBytes)
-    signature.sign
   }
 }

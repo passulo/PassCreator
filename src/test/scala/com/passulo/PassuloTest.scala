@@ -50,7 +50,7 @@ class PassuloTest extends AnyWordSpec with Matchers {
     "create a valid signature" in {
       val privateKeyBytes = Base64.getDecoder.decode("MC4CAQAwBQYDK2VwBCIEIBY4OoD0rMpF72BIGUryoKa51W/vdgk4/dqy+WAquaq3")
       val privateKey      = KeyFactory.getInstance("ed25519").generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes))
-      val signature       = Passulo.signToken(tokenBytes = "abc".getBytes, privateKey)
+      val signature       = CryptoHelper.sign("abc".getBytes, privateKey)
 
       val expected = "rWlQqQgZ8EGK++3HuCtTArg+z/cTiiew5haK2dyNh4QlKsq2NozvEdFw7gakTCb/k08k9v/Rhei0VopPZjEQCg=="
 
