@@ -44,18 +44,22 @@ class RegisterCommand extends Callable[Int] {
     val url              = s"https://$server/v1/key/register"
     val payload          = RegisterKey(keyid, name, CryptoHelper.encodeAsPEM(publicKey)).asJson
     println(s"Asking server at $url what to do…")
-    val serverCommand    = Http.post(url, payload)
 
-    val goTo = serverCommand.body()
+    val serverCommand = Http.post(url, payload)
+    val goTo          = serverCommand.body()
 
-    println(s"Response: ${serverCommand.statusCode()}")
-    println(s"Response: ${serverCommand.body()}")
+    serverCommand.statusCode() match {
+      case 200 =>
+        if (Desktop.isDesktopSupported)
+          Desktop.getDesktop.browse(URI.create(goTo.stripPrefix("\"").stripSuffix("\"")))
+        
+        println(StdOutText.headline(s"If your browser didn't open, please open this URL yourself:"))
+        println(goTo)
 
-    if (Desktop.isDesktopSupported)
-      Desktop.getDesktop.browse(URI.create(goTo.stripPrefix("\"").stripSuffix("\"")))
-
-    println(StdOutText.headline(s"If your browser didn't open, please open this URL yourself:"))
-    println(goTo)
+      case _ =>
+        println(StdOutText.error(s"Error asking the server $url what to do."))
+        println(s"Response was ${serverCommand.statusCode()} ${serverCommand.body()}")
+    }
 
     0
   }
