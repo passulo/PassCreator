@@ -21,8 +21,8 @@ case class PassInfo(
     company: String,
     email: String,
     telephone: String,
-    validUntil: LocalDate,
-    memberSince: LocalDate,
+    validUntil: Option[LocalDate],
+    memberSince: Option[LocalDate],
     template: String
 ) {
 

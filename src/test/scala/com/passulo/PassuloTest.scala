@@ -27,8 +27,8 @@ class PassuloTest extends AnyWordSpec with Matchers {
         company = "foo",
         email = "lange@foo.com",
         telephone = "1234",
-        validUntil = LocalDate.of(2022, 12, 31),
-        memberSince = LocalDate.of(2015, 1, 1),
+        validUntil = Some(LocalDate.of(2022, 12, 31)),
+        memberSince = Some(LocalDate.of(2015, 1, 1)),
         template = "default"
       )
       val associationName = "Passulo Test Assoc."

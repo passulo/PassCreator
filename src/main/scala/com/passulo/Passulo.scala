@@ -14,18 +14,23 @@ object Passulo {
 
   def createPasses(members: Iterable[PassInfo], signingInformation: PKSigningInformation, privateKey: PrivateKey, config: Config): Iterable[ResultListEntry] =
     members.map { member =>
-      val passId = NanoID.create()
-      println(s"Creating pass for: ${member.fullName} (id=$passId) with template '${member.templateFolder}'…")
-      val qrCodeContent                = Passulo.createUrl(member, passId, privateKey, config.keys.keyIdentifier, config.passSettings)
-      val pass                         = Passkit.pass(member, passId, qrCodeContent, config)
-      val templateFolder               = Paths.get(s"templates/${member.templateFolder}/").toAbsolutePath.toString
-      val signedAndZippedPkPassArchive = Passkit4S.createSignedAndZippedPkPassArchive(pass, templateFolder, signingInformation)
+      val passId                       = NanoID.create()
+      val signedAndZippedPkPassArchive = createPass(member, passId, signingInformation, privateKey, config)
       val filename                     = s"out/$passId-${member.filename}.pkpass"
       Files.createDirectories(Paths.get(filename).getParent)
       Files.write(Paths.get(filename), signedAndZippedPkPassArchive)
       println(s"Written to $filename")
       ResultListEntry.from(passId, member)
     }
+
+  def createPass(member: PassInfo, passId: String, signingInformation: PKSigningInformation, privateKey: PrivateKey, config: Config): Array[Byte] = {
+    println(s"Creating pass for: ${member.fullName} (id=$passId) with template '${member.templateFolder}'…")
+    val qrCodeContent                = Passulo.createUrl(member, passId, privateKey, config.keys.keyIdentifier, config.passSettings)
+    val pass                         = Passkit.pass(member, passId, qrCodeContent, config)
+    val templateFolder               = Paths.get(s"templates/${member.templateFolder}/").toAbsolutePath.toString
+    val signedAndZippedPkPassArchive = Passkit4S.createSignedAndZippedPkPassArchive(pass, templateFolder, signingInformation)
+    signedAndZippedPkPassArchive
+  }
 
   def createUrl(info: PassInfo, passId: String, privateKey: PrivateKey, publicKeyIdentifier: String, settings: PassSettings): String = {
     val version = com.passulo.token.TokenProto.scalaDescriptor.packageName match {
@@ -62,8 +67,8 @@ object Passulo {
       email = info.email,
       telephone = info.telephone,
       association = association,
-      validUntil = Some(Timestamp.of(info.validUntil.toEpochSecond(LocalTime.MAX, ZoneOffset.UTC), nanos = 0)),
-      memberSince = Some(Timestamp.of(info.memberSince.toEpochSecond(LocalTime.MAX, ZoneOffset.UTC), nanos = 0))
+      validUntil = info.validUntil.map(d => Timestamp.of(d.toEpochSecond(LocalTime.MAX, ZoneOffset.UTC), nanos = 0)),
+      memberSince = info.memberSince.map(d => Timestamp.of(d.toEpochSecond(LocalTime.MAX, ZoneOffset.UTC), nanos = 0))
     )
     token.toByteArray
   }

@@ -1,6 +1,6 @@
 package com.passulo
 
-import com.passulo.cli.{AppleCACommand, CertificateCommand, CreateCommand, KeypairCommand, RegisterCommand, SignCommand, TemplateCommand}
+import com.passulo.cli.{AppleCACommand, CertificateCommand, CreateCommand, KeypairCommand, RegisterCommand, ServerCommand, SignCommand, TemplateCommand}
 import picocli.AutoComplete.GenerateCompletion
 import picocli.CommandLine
 import picocli.CommandLine.Help.Ansi
@@ -16,6 +16,7 @@ import picocli.CommandLine.{Command, ITypeConverter}
     classOf[AppleCACommand],
     classOf[TemplateCommand],
     classOf[CreateCommand],
+    classOf[ServerCommand],
     classOf[GenerateCompletion]
   ),
   mixinStandardHelpOptions = true,

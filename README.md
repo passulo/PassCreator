@@ -1,4 +1,14 @@
-# How to setup Passulo
+# Passulo `PassCreator`
+
+The `PassCreator` turns membership data into Wallet-passes. It has too modes:
+
+* batch/cli-mode: loads from `csv` and writes `.pkpass` files,
+* server-mode: runs continuously and converts HTTP posts to `application/vnd.apple.pkpass`.
+
+You usually want to use the cli-mode to set up all dependencies and create the initial batch of passes.
+Afterwards `PassCreator` in server mode can create updates for single members.
+
+# Initial Setup
 
 ## Create a key pair
 
@@ -19,8 +29,13 @@ Since everything happens on your device with code that you can audit, you don't 
 
 ## Register public key
 
+Public keys have to be added by an administrator to verify that you have authority to distribute passes for that association.
+This is done through [GitHub Issues](https://github.com/passulo/Passulo-Server/issues?q=label%3Anew-public-key).
+
+You can either [create a new issue manually](https://github.com/passulo/Passulo-Server/issues/new?assignees=JannikArndt&labels=new-public-key&template=new-public-key-on-app-passulo-com.md&title=New+Public+Key+for+%60%3Cname+of+your+assiciation%3E%60) or use the `PassCreator` to fill in most of the data for you:
+
 ```bash
-$ passulo register --name "My Association" --server app.passulo.com
+$ passulo register --key-id "myAssocV1" --name "My Association" --server app.passulo.com
 ```
 
 #### Why?
@@ -133,6 +148,45 @@ This uses the files in the `template` folder and the settings from `passulo.conf
 You can now send the passes to the members of your association.
 
 ## TODO update, delete
+
+## Server Mode
+
+Run `PassCreator` in server mode to create single passes via http:
+
+```shell
+$ passulo server --port 8080
+```
+
+Try it out with
+
+```shell
+$ curlie localhost:8080/create -OJ -d '{
+    "id": "xyz",
+    "firstName": "Tanja",
+    "middleName": "",
+    "lastName": "Lange",
+    "gender": "f",
+    "number": "432324",
+    "status": "Gold",
+    "role": "",
+    "company": "Universiteit Eindhoven",
+    "email": "lange@eindhoven.nl",
+    "telephone": "+31 (0) 40 247 4764",
+    "memberSince": "2002-03-01",
+    "template": "gold"
+}'
+
+HTTP/1.1 200 OK
+Content-Disposition: attachment; filename="432324-Tanja+Lange.pkpass"
+Server: akka-http/10.2.8
+Date: Wed, 02 Mar 2022 17:16:30 GMT
+Transfer-Encoding: chunked
+Content-Type: application/vnd.apple.pkpass
+```
+
+**Attention**: Server mode provides *no security whatsoever*!!!
+That is because even if it _did_, you still have the private key and the signing certificate placed next to it, but would now think everything would be okay.
+It is YOUR duty to run this in a secure environment where your membership-management-software can reach it, but the outside world can't.
 
 ## Images
 

@@ -12,7 +12,7 @@ lazy val root = (project in file("."))
     version              := "1.0.0",
     scalaVersion         := "2.13.8",
     scalacOptions        := scalaCompilerOptions,
-    libraryDependencies ++= dependencies ++ testDependencies ++ loggingDependencies
+    libraryDependencies ++= dependencies ++ jsonDependencies ++ testDependencies ++ akkaDependencies
   )
   .enablePlugins(JavaAppPackaging)
 
@@ -26,20 +26,30 @@ lazy val dependencies = Seq(
   "info.picocli"           % "picocli"            % "4.6.3"
 )
 
+val circeVersion = "0.14.1"
+
+lazy val jsonDependencies = Seq(
+  "io.circe"          %% "circe-core"      % circeVersion,
+  "io.circe"          %% "circe-generic"   % circeVersion,
+  "io.circe"          %% "circe-parser"    % circeVersion,
+  "de.heikoseeberger" %% "akka-http-circe" % "1.39.2"
+)
+
+val akkaVersion     = "2.6.18"
+val akkaHttpVersion = "10.2.8"
+
+lazy val akkaDependencies = Seq(
+  "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
+  "com.typesafe.akka" %% "akka-stream"              % akkaVersion,
+  "com.typesafe.akka" %% "akka-http"                % akkaHttpVersion,
+  "org.slf4j"          % "slf4j-nop"                % "1.7.36", // shut up SLF4J
+  "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
+  "com.typesafe.akka" %% "akka-http-testkit"        % akkaHttpVersion % Test
+)
+
 lazy val testDependencies = Seq(
   "org.scalatest" %% "scalatest"     % "3.2.11" % Test,
   "org.mockito"   %% "mockito-scala" % "1.17.5" % Test
-)
-
-lazy val log4JVersion = "2.17.2"
-
-lazy val loggingDependencies = Seq(
-  // scala-logging wraps SLF4J, which can use log4j2
-  "com.typesafe.scala-logging" %% "scala-logging"    % "3.9.4",
-  "org.apache.logging.log4j"    % "log4j-api"        % log4JVersion,
-  "org.apache.logging.log4j"    % "log4j-core"       % log4JVersion,
-  "org.apache.logging.log4j"    % "log4j-slf4j-impl" % log4JVersion % "runtime",
-  "com.lmax"                    % "disruptor"        % "3.4.4"      % "runtime"
 )
 
 lazy val scalaCompilerOptions = Seq(
