@@ -52,7 +52,7 @@ class RegisterCommand extends Callable[Int] {
       case 200 =>
         if (Desktop.isDesktopSupported)
           Desktop.getDesktop.browse(URI.create(goTo.stripPrefix("\"").stripSuffix("\"")))
-        
+
         println(StdOutText.headline(s"If your browser didn't open, please open this URL yourself:"))
         println(goTo)
 
