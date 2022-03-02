@@ -1,5 +1,6 @@
 package com.passulo
 import com.passulo.token.Token
+import com.passulo.util.CryptoHelper
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

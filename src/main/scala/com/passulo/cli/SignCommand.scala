@@ -1,6 +1,6 @@
 package com.passulo.cli
 
-import com.passulo.CryptoHelper
+import com.passulo.util.CryptoHelper
 import picocli.CommandLine.{Command, Option, Parameters}
 
 import java.io.File

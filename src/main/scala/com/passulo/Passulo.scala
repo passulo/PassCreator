@@ -2,6 +2,7 @@ package com.passulo
 import com.google.protobuf.timestamp.Timestamp
 import com.passulo.token.Token
 import com.passulo.token.Token.Gender
+import com.passulo.util.{CryptoHelper, NanoID}
 import de.brendamour.jpasskit.signing.PKSigningInformation
 
 import java.nio.file.{Files, Paths}

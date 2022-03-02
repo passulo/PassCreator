@@ -1,6 +1,7 @@
 package com.passulo.cli
 
-import com.passulo.{CryptoHelper, StdOutText}
+import com.passulo.StdOutText
+import com.passulo.util.CryptoHelper
 import picocli.CommandLine.{Command, Option}
 
 import java.util.concurrent.Callable

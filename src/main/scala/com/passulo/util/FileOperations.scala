@@ -1,4 +1,6 @@
-package com.passulo
+package com.passulo.util
+
+import com.passulo.StdOutText
 
 import java.io.{File, FileNotFoundException}
 import java.nio.charset.StandardCharsets

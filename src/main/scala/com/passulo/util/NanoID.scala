@@ -1,4 +1,4 @@
-package com.passulo
+package com.passulo.util
 
 import java.security.SecureRandom
 

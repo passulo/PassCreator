@@ -1,5 +1,6 @@
 package com.passulo
 
+import com.passulo.util.NanoID
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

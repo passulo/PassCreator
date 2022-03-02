@@ -1,4 +1,4 @@
-package com.passulo
+package com.passulo.util
 
 import java.io.{File, IOException}
 import java.nio.file.Files
@@ -7,7 +7,7 @@ import java.security.cert.{CertificateFactory, X509Certificate}
 import java.security.interfaces.EdECPublicKey
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
 import java.util.Base64
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters.{CollectionHasAsScala, EnumerationHasAsScala}
 import scala.util.{Failure, Success, Try}
 
 /** Collection of helpful abstractions to load and decode certificates and keys, using java.Security and bouncy castle.

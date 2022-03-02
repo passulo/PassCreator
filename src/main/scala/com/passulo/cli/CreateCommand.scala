@@ -1,6 +1,7 @@
 package com.passulo.cli
 
 import com.passulo.*
+import com.passulo.util.CryptoHelper
 import de.brendamour.jpasskit.signing.PKSigningInformation
 import picocli.CommandLine.{Command, Option}
 import pureconfig.ConfigSource
