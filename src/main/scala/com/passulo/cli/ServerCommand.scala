@@ -49,7 +49,7 @@ class ServerCommand extends Callable[Int] {
         pathEndOrSingleSlash {
           post {
             entity(as[PassInfo]) { member =>
-              val passId      = NanoID.create()
+              val passId      = Passulo.createAndRegisterId(privateKey, config)
               val pass        = Passulo.createPass(member, passId, signingInformation, privateKey, config)
               val contentType = ContentType.parse("application/vnd.apple.pkpass").getOrElse(ContentTypes.`application/octet-stream`)
               respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"${member.filename}.pkpass"))) {
