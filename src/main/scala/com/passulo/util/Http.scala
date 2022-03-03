@@ -6,15 +6,13 @@ import java.net.URI
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 import java.net.http.{HttpClient, HttpRequest, HttpResponse}
-import scala.concurrent.Future
-import scala.jdk.FutureConverters.*
 object Http {
 
   val client: HttpClient = HttpClient.newHttpClient
 
-  def get(url: String): Future[HttpResponse[String]] = {
+  def get(url: String): HttpResponse[String] = {
     val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
-    client.sendAsync(request, BodyHandlers.ofString()).asScala
+    client.send(request, BodyHandlers.ofString())
   }
 
   def post(url: String, body: Json): HttpResponse[String] = {
@@ -23,7 +21,6 @@ object Http {
       .header("Content-Type", "application/json")
       .POST(BodyPublishers.ofString(body.toString()))
       .build()
-//    client.sendAsync(request, BodyHandlers.ofString()).asScala
     client.send(request, BodyHandlers.ofString())
   }
 }

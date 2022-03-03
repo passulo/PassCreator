@@ -40,6 +40,7 @@ object PassCreator {
 object StdOutText {
   def error(text: String): String    = Ansi.AUTO.string(s"@|bold,red $text|@")
   def success(text: String): String  = Ansi.AUTO.string(s"@|bold,green $text|@")
+  def warn(text: String): String     = Ansi.AUTO.string(s"@|bold,yellow $text|@")
   def headline(text: String): String = Ansi.AUTO.string(s"@|bold,underline $text|@")
   def code(text: String): String     = Ansi.AUTO.string(s"@|cyan $text|@")
 }

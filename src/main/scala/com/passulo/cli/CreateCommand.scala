@@ -1,15 +1,16 @@
 package com.passulo.cli
 
+import cats.implicits.toBifunctorOps
 import com.passulo.*
-import com.passulo.util.CryptoHelper
+import com.passulo.util.{CryptoHelper, Http}
 import de.brendamour.jpasskit.signing.PKSigningInformation
 import picocli.CommandLine.{Command, Option}
 import pureconfig.ConfigSource
 import pureconfig.generic.auto.*
 
 import java.io.File
-import java.security.PrivateKey
 import java.util.concurrent.Callable
+import scala.util.{Failure, Success, Try}
 
 @Command(
   name = "create",
@@ -22,11 +23,30 @@ class CreateCommand extends Callable[Int] {
   @Option(names = Array("-s", "--source"), description = Array("CSV files with members."), required = true)
   var source: String = _
 
+  // noinspection VarCouldBeVal
+  @Option(names = Array("-n", "--dry-run"), description = Array("Don't actually register the passes at the server."))
+  var dryRun: Boolean = false
+
   def call(): Int = {
-    createPasses()
+    createPasses() match {
+      case Left(value)  => println(StdOutText.error(s"Error creating passes: ${value.message}"))
+      case Right(value) => println(StdOutText.success(s"Successfully created ${value.size} passes!"))
+    }
     println(StdOutText.success("Done."))
     0
   }
+
+  def createPasses(): Either[PassCreationError, Iterable[ResultListEntry]] =
+    for {
+      config            <- ConfigSource.resources("passulo.conf").load[Config].toOption.toRight(ConfigurationError("Failed to load passulo.conf."))
+      privateKey         = CryptoHelper.loadPKCS8EncodedPEM(new File(config.keys.privateKey))
+      signingInformation = loadSigningInfo(config.keys)
+      _                 <- validatePublicKey(config, dryRun)
+      _                  = println(s"Loading Members from ${config.input.csv}")
+      members           <- PassInfo.readFromCsv(config.input.csv).leftMap[PassCreationError](e => CsvError(e.getMessage))
+      results            = Passulo.createPasses(members, signingInformation, privateKey, config)
+      _                  = ResultListEntry.write(results.toSeq, "out/_results.csv")
+    } yield results
 
   def loadSigningInfo(keys: Keys): PKSigningInformation = {
     println("Loading Apple Developer certificate from keystore…")
@@ -38,19 +58,53 @@ class CreateCommand extends Callable[Int] {
     new PKSigningInformation(cert, key, appleCert)
   }
 
-  def createPasses(): Unit = {
-    println("Loading configuration from 'passulo.conf'…")
-    val config: Config = ConfigSource.resources("passulo.conf").loadOrThrow[Config]
+  def validatePublicKey(config: Config, dryRun: Boolean): Either[PassCreationError, Success.type] = {
+    val localPublicKey = CryptoHelper.loadPEM(new File(config.keys.publicKey))
 
-    println("Loading private key…")
-    val privateKey: PrivateKey = CryptoHelper.loadPKCS8EncodedPEM(new File(config.keys.privateKey))
+    println(s"Checking public key is registered with server ${config.passSettings.server}…")
+    Try(Http.get(config.passSettings.server + "v1/key/" + config.keys.keyIdentifier)) match {
+      case Success(response) if response.statusCode() == 200 =>
+        val serverKey = response.body().stripPrefix("\"").stripSuffix("\"")
+        println(s"Key with id ${config.keys.keyIdentifier} is registered with server.")
+        println(s"server: $serverKey")
+        println(s"local:  $localPublicKey")
+        if (serverKey == localPublicKey) {
+          println(StdOutText.success("Public Key matches registered key."))
+          Right(Success)
+        } else if (dryRun) {
+          println(StdOutText.warn("Public Key is not registered with server. Ignoring check because --dry-run is specified."))
+          Right(Success)
+        } else {
+          Left(PublicKeyNotOnServer("Public Key does not match the one registered with the server. Use --dry-run to skip this check."))
+        }
+      case Success(response) if response.statusCode() == 404 && dryRun =>
+        println(StdOutText.warn("Public Key is not registered with server. Ignoring check because --dry-run is specified."))
+        Right(Success)
+      case _ if dryRun =>
+        println(StdOutText.warn("Could not verify if Public Key is registered with server. Ignoring check because --dry-run is specified."))
+        Right(Success)
 
-    val signingInformation = loadSigningInfo(config.keys)
-
-    println(s"Loading Members from ${config.input.csv}")
-    val members: Iterable[PassInfo] = PassInfo.readFromCsv(config.input.csv)
-
-    val results = Passulo.createPasses(members, signingInformation, privateKey, config)
-    ResultListEntry.write(results.toSeq, "out/_results.csv")
+      case Success(response) if response.statusCode() == 404 =>
+        Left(ServerError(s"""Key for keyId ${config.keys.keyIdentifier} was not found on server ${config.passSettings.server}.
+                            |Make sure you have registered with the server (using the register command).
+                            |You can use --dry-run to skip this check.""".stripMargin))
+      case Success(response) =>
+        Left(ServerError(s"Error from server (${response.statusCode()}): ${response.body()}. Use --dry-run to skip this check."))
+      case Failure(exception) =>
+        Left(ServerError(s"""An exception occurred when asking the server at ${config.passSettings.server}.
+                            |Make sure you are connected to the internet.
+                            |You can use --dry-run to skip this check.
+                            |Details: ${exception.toString}""".stripMargin))
+    }
   }
+
 }
+
+trait PassCreationError {
+  def message: String
+}
+
+case class ConfigurationError(message: String)   extends PassCreationError
+case class ServerError(message: String)          extends PassCreationError
+case class CsvError(message: String)             extends PassCreationError
+case class PublicKeyNotOnServer(message: String) extends PassCreationError

@@ -1,10 +1,11 @@
 package com.passulo
 
+import cats.implicits.{catsStdInstancesForEither, toTraverseOps}
 import com.passulo.PassInfo.NoneIfEmpty
 import kantan.csv.generic.*
 import kantan.csv.java8.*
-import kantan.csv.ops.*
-import kantan.csv.rfc
+import kantan.csv.ops.toCsvInputOps
+import kantan.csv.{rfc, ReadResult}
 
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
@@ -51,11 +52,7 @@ case class PassInfo(
 object PassInfo {
   def NoneIfEmpty(string: String): Option[String] = if (string.isBlank) None else Some(string)
 
-  def readFromCsv(file: String): Iterable[PassInfo] =
-    Thread.currentThread().getContextClassLoader.getResource(file).asCsvReader[PassInfo](rfc.withHeader).toIterable.flatMap {
-      case Left(value) =>
-        println(s"Error reading row: $value")
-        None
-      case Right(value) => Some(value)
-    }
+  def readFromCsv(file: String): ReadResult[Seq[PassInfo]] =
+    Thread.currentThread().getContextClassLoader.getResource(file).asCsvReader[PassInfo](rfc.withHeader).toSeq.sequence
+
 }

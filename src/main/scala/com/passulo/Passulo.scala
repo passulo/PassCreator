@@ -43,7 +43,7 @@ object Passulo {
     val signature        = CryptoHelper.sign(tokenBytes, privateKey)
     val signatureEncoded = Base64.getUrlEncoder.encodeToString(signature)
     val url              = s"${settings.server}?code=$tokenEncoded&v=$version&sig=$signatureEncoded&kid=$publicKeyIdentifier"
-    println(s"Created URL of length ${url.length}: $url")
+    println(s"Created URL of length ${url.length}")
     url
   }
 

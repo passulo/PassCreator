@@ -65,11 +65,14 @@ object CryptoHelper {
     Base64.getDecoder.decode(encodedKeyString)
   }
 
-  /** Reads a file in PEM format, returns the payload (between the lines). */
+  /** Reads a file in PEM format, returns the payload (between the lines) as bytes. */
   def decodePEM(file: File): Array[Byte] = {
-    val encodedKeyString = Files.readAllLines(file.toPath).asScala.filterNot(_.startsWith("----")).mkString("")
+    val encodedKeyString = loadPEM(file)
     Base64.getDecoder.decode(encodedKeyString)
   }
+
+  /** Reads a file in PEM format, returns the payload (between the lines) as a base64 encoded String. */
+  def loadPEM(file: File): String = Files.readAllLines(file.toPath).asScala.filterNot(_.startsWith("----")).mkString("")
 
   /** Reads a password-protected private key and matching certificate from a PKCS #12 keystore (.p12 file)
     *
