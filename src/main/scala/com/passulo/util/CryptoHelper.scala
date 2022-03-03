@@ -58,13 +58,6 @@ object CryptoHelper {
     keyFactory.generatePrivate(spec)
   }
 
-  /** Reads a file in PEM format, returns the payload (between the lines). */
-  def decodePEM(filename: String): Array[Byte] = {
-    val file             = FileOperations.loadFile(filename)
-    val encodedKeyString = file.getLines().filterNot(_.startsWith("----")).mkString("")
-    Base64.getDecoder.decode(encodedKeyString)
-  }
-
   /** Reads a file in PEM format, returns the payload (between the lines) as bytes. */
   def decodePEM(file: File): Array[Byte] = {
     val encodedKeyString = loadPEM(file)
@@ -76,22 +69,19 @@ object CryptoHelper {
 
   /** Reads a password-protected private key and matching certificate from a PKCS #12 keystore (.p12 file)
     *
-    * @param keyStorePath
+    * @param keyStore
     *   Path to the .p12 file
     * @param keyStorePassword
     *   Password for the private key
     */
-  def privateKeyAndCertFromKeystore(keyStorePath: String, keyStorePassword: String): Option[(PrivateKey, X509Certificate)] = {
-    val inputStream = Thread.currentThread().getContextClassLoader.getResourceAsStream(keyStorePath)
-    val password    = keyStorePassword.toCharArray
-    val keystore    = KeyStore.getInstance("PKCS12")
-    Try(keystore.load(inputStream, password)) match {
+  def privateKeyAndCertFromKeystore(keyStore: File, keyStorePassword: String): Either[String, (PrivateKey, X509Certificate)] = {
+    val password = keyStorePassword.toCharArray
+    val keystore = KeyStore.getInstance("PKCS12")
+    Try(keystore.load(keyStore.toURI.toURL.openStream(), password)) match {
       case Failure(e: IOException) if e.getCause.isInstanceOf[UnrecoverableKeyException] =>
-        println("Wrong password for Keystore")
-        None
+        Left("Wrong password for Keystore")
       case Failure(exception) =>
-        println(s"Error getting private key or certificate from keystore: ${exception.getMessage}")
-        None
+        Left(s"Error getting private key or certificate from keystore: ${exception.getMessage}")
       case Success(_) => extractCertificateWithKey(keystore, password)
     }
   }
@@ -105,16 +95,25 @@ object CryptoHelper {
     }
   }
 
-  private def extractCertificateWithKey(keyStore: KeyStore, password: Array[Char]): Option[(PrivateKey, X509Certificate)] =
-    keyStore.aliases().asScala.collectFirst { alias =>
-      keyStore.getKey(alias, password) match {
-        case key: PrivateKey =>
-          keyStore.getCertificate(alias) match {
-            case cert: X509Certificate if Try(cert.checkValidity()).isSuccess => (key, cert)
-          }
+  private def extractCertificateWithKey(keyStore: KeyStore, password: Array[Char]): Either[String, (PrivateKey, X509Certificate)] =
+    keyStore
+      .aliases()
+      .asScala
+      .collectFirst { alias =>
+        Try(keyStore.getKey(alias, password)) match {
+          case Success(key: PrivateKey) =>
+            keyStore.getCertificate(alias) match {
+              case cert: X509Certificate =>
+                Try(cert.checkValidity()) match {
+                  case Failure(exception) => Left(s"Certificate is not valid: ${exception.toString}")
+                  case Success(_)         => Right((key, cert))
+                }
+            }
+          case Failure(e: UnrecoverableKeyException) => Left(s"Failed to load key from keystore: Is the password correct? ${e.toString}")
+          case e                                     => Left(s"Failed to load key from keystore. $e")
+        }
       }
-
-    }
+      .getOrElse(Left("Error: The keystore doesn't contain any keys!"))
 
   def sign(bytes: Array[Byte], privateKey: PrivateKey): Array[Byte] = {
     val signature: Signature = Signature.getInstance("Ed25519")

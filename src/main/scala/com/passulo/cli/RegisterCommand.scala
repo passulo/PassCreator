@@ -1,6 +1,6 @@
 package com.passulo.cli
 
-import com.passulo.util.{CryptoHelper, Http}
+import com.passulo.util.{CryptoHelper, FileOperations, Http}
 import com.passulo.{Config, StdOutText}
 import io.circe.generic.auto.*
 import io.circe.syntax.*
@@ -12,6 +12,7 @@ import java.awt.Desktop
 import java.io.File
 import java.net.URI
 import java.util.concurrent.Callable
+import scala.util.Try
 
 @Command(
   name = "register",
@@ -38,29 +39,38 @@ class RegisterCommand extends Callable[Int] {
   var publicKeyFile: File = _
 
   def call(): Int = {
-    println("Loading public key…")
-    val publicKeyFileRef = scala.Option(publicKeyFile).getOrElse(new File(config.keys.publicKey))
-    val publicKey        = CryptoHelper.loadX509EncodedPEM(publicKeyFileRef)
-    val url              = s"https://$server/v1/key/register"
-    val payload          = RegisterKey(keyid, name, CryptoHelper.encodeAsPEM(publicKey)).asJson
-    println(s"Asking server at $url what to do…")
 
-    val serverCommand = Http.post(url, payload)
-    val goTo          = serverCommand.body()
+    val pulicKey = for {
+      configFile    <- FileOperations.loadFile("passulo.conf")
+      config        <- ConfigSource.file(configFile).load[Config].toOption.toRight(ConfigurationError("Failed to load configuration."))
+      publicKeyFile <- if (publicKeyFile != null) Right(publicKeyFile) else FileOperations.loadFile(config.keys.publicKey)
+      publicKey     <- Try(CryptoHelper.loadX509EncodedPEM(publicKeyFile)).toOption.toRight(KeyError("Cannot decode key."))
+    } yield publicKey
 
-    serverCommand.statusCode() match {
-      case 200 =>
-        if (Desktop.isDesktopSupported)
-          Desktop.getDesktop.browse(URI.create(goTo.stripPrefix("\"").stripSuffix("\"")))
+    pulicKey match {
+      case Left(value) => println(StdOutText.error(s"Failed to load public key: ${value.message}"))
+      case Right(edECPublicKey) =>
+        println("Loading public key…")
+        val url     = s"https://$server/v1/key/register"
+        val payload = RegisterKey(keyid, name, CryptoHelper.encodeAsPEM(edECPublicKey)).asJson
+        println(s"Asking server at $url what to do…")
 
-        println(StdOutText.headline(s"If your browser didn't open, please open this URL yourself:"))
-        println(goTo)
+        val serverCommand = Http.post(url, payload)
+        val goTo          = serverCommand.body()
 
-      case _ =>
-        println(StdOutText.error(s"Error asking the server $url what to do."))
-        println(s"Response was ${serverCommand.statusCode()} ${serverCommand.body()}")
+        serverCommand.statusCode() match {
+          case 200 =>
+            if (Desktop.isDesktopSupported)
+              Desktop.getDesktop.browse(URI.create(goTo.stripPrefix("\"").stripSuffix("\"")))
+
+            println(StdOutText.headline(s"If your browser didn't open, please open this URL yourself:"))
+            println(goTo)
+
+          case _ =>
+            println(StdOutText.error(s"Error asking the server $url what to do."))
+            println(s"Response was ${serverCommand.statusCode()} ${serverCommand.body()}")
+        }
     }
-
     0
   }
 

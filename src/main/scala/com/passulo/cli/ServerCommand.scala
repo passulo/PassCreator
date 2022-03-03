@@ -10,19 +10,17 @@ import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import com.passulo.*
-import com.passulo.util.{CryptoHelper, NanoID}
-import de.brendamour.jpasskit.signing.PKSigningInformation
+import com.passulo.cli.CreateCommand.{loadSigningInfo, validatePublicKey}
+import com.passulo.util.{CryptoHelper, FileOperations, NanoID}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport.*
 import io.circe.generic.auto.*
 import picocli.CommandLine.{Command, Option}
 import pureconfig.ConfigSource
 import pureconfig.generic.auto.*
 
-import java.io.File
-import java.security.PrivateKey
 import java.util.concurrent.Callable
 import scala.concurrent.duration.DurationInt
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 @Command(
   name = "server",
   mixinStandardHelpOptions = true,
@@ -33,18 +31,20 @@ class ServerCommand extends Callable[Int] {
   @Option(names = Array("-p", "--port"), description = Array("The port the server uses."))
   var port: Int = 8080
 
+  @Option(names = Array("-n", "--dry-run"), description = Array("Don't actually register the passes at the server."))
+  var dryRun: Boolean = false
+
   def call(): Int = {
 
-    println("Loading configuration from 'passulo.conf'…")
-    val config: Config = ConfigSource.resources("passulo.conf").loadOrThrow[Config]
-
-    println("Loading private key…")
-    val privateKey: PrivateKey = CryptoHelper.loadPKCS8EncodedPEM(new File(config.keys.privateKey))
-
-    val signingInformation = loadSigningInfo(config.keys)
-
-    val rootBehavior = Behaviors.setup[Nothing] { context =>
-      // Create routes
+    val rootBehavior = for {
+      configFile         <- FileOperations.loadFile("passulo.conf")
+      config             <- ConfigSource.file(configFile).load[Config].toOption.toRight(ConfigurationError("Failed to load configuration."))
+      privateKeyFile     <- FileOperations.loadFile(config.keys.privateKey)
+      privateKey         <- Try(CryptoHelper.loadPKCS8EncodedPEM(privateKeyFile)).toOption.toRight(KeyError("Failed to parse private key."))
+      signingInformation <- loadSigningInfo(config.keys)
+      publicKeyFile      <- FileOperations.loadFile(config.keys.publicKey)
+      _                  <- validatePublicKey(config, publicKeyFile, dryRun)
+    } yield Behaviors.setup[Nothing] { context =>
       val routes = path("create") {
         pathEndOrSingleSlash {
           post {
@@ -62,13 +62,16 @@ class ServerCommand extends Callable[Int] {
 
       // Start server
       startHttpServer(routes, port)(context.system)
-
       Behaviors.empty
     }
 
-    println(StdOutText.success(s"Starting server..."))
+    rootBehavior match {
+      case Left(value) => println(StdOutText.error(s"Error setting up: ${value.message}"))
+      case Right(value) =>
+        println(StdOutText.success(s"Starting server..."))
+        ActorSystem[Nothing](value, "AkkaHttpServer")
+    }
 
-    val _ = ActorSystem[Nothing](rootBehavior, "AkkaHttpServer")
     0
   }
 
@@ -90,15 +93,5 @@ class ServerCommand extends Callable[Int] {
         println(ex)
         system.terminate()
     }
-  }
-
-  private def loadSigningInfo(keys: Keys): PKSigningInformation = {
-    println("Loading Apple Developer certificate from keystore…")
-    val (key, cert) = CryptoHelper.privateKeyAndCertFromKeystore(keys.keystore, keys.password).get
-
-    println("Loading Apple WWDR CA…")
-    val appleCert = CryptoHelper.certificateFromFile(keys.appleCaCert).get
-
-    new PKSigningInformation(cert, key, appleCert)
   }
 }

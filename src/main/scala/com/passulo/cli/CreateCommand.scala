@@ -2,7 +2,8 @@ package com.passulo.cli
 
 import cats.implicits.toBifunctorOps
 import com.passulo.*
-import com.passulo.util.{CryptoHelper, Http}
+import com.passulo.cli.CreateCommand.{loadSigningInfo, validatePublicKey}
+import com.passulo.util.{CryptoHelper, FileOperations, Http}
 import de.brendamour.jpasskit.signing.PKSigningInformation
 import picocli.CommandLine.{Command, Option}
 import pureconfig.ConfigSource
@@ -38,28 +39,32 @@ class CreateCommand extends Callable[Int] {
 
   def createPasses(): Either[PassCreationError, Iterable[ResultListEntry]] =
     for {
-      config            <- ConfigSource.resources("passulo.conf").load[Config].toOption.toRight(ConfigurationError("Failed to load passulo.conf."))
-      privateKey         = CryptoHelper.loadPKCS8EncodedPEM(new File(config.keys.privateKey))
-      signingInformation = loadSigningInfo(config.keys)
-      _                 <- validatePublicKey(config, dryRun)
-      _                  = println(s"Loading Members from ${config.input.csv}")
-      members           <- PassInfo.readFromCsv(config.input.csv).leftMap[PassCreationError](e => CsvError(e.getMessage))
-      results            = Passulo.createPasses(members, signingInformation, privateKey, config)
-      _                  = ResultListEntry.write(results.toSeq, "out/_results.csv")
+      configFile         <- FileOperations.loadFile("passulo.conf")
+      config             <- ConfigSource.file(configFile).load[Config].toOption.toRight(ConfigurationError("Failed to load configuration."))
+      privateKeyFile     <- FileOperations.loadFile(config.keys.privateKey)
+      privateKey         <- Try(CryptoHelper.loadPKCS8EncodedPEM(privateKeyFile)).toOption.toRight(KeyError("Failed to parse private key."))
+      signingInformation <- loadSigningInfo(config.keys)
+      publicKeyFile      <- FileOperations.loadFile(config.keys.publicKey)
+      _                  <- validatePublicKey(config, publicKeyFile, dryRun)
+      _                   = println(s"Loading Members from ${config.input.csv}")
+      members            <- PassInfo.readFromCsv(config.input.csv).leftMap[PassCreationError](e => CsvError(e.getMessage))
+      results             = Passulo.createPasses(members, signingInformation, privateKey, config)
+      _                   = ResultListEntry.write(results.toSeq, "out/_results.csv")
     } yield results
 
-  def loadSigningInfo(keys: Keys): PKSigningInformation = {
-    println("Loading Apple Developer certificate from keystore…")
-    val (key, cert) = CryptoHelper.privateKeyAndCertFromKeystore(keys.keystore, keys.password).get
+}
 
-    println("Loading Apple WWDR CA…")
-    val appleCert = CryptoHelper.certificateFromFile(keys.appleCaCert).get
+object CreateCommand {
+  def loadSigningInfo(keys: Keys): Either[PassCreationError, PKSigningInformation] =
+    for {
+      keystoreFile <- FileOperations.loadFile(keys.keystore)
+      tuple        <- CryptoHelper.privateKeyAndCertFromKeystore(keystoreFile, keys.password).leftMap(KeyError)
+      (key, cert)   = (tuple._1, tuple._2)
+      appleCert     = CryptoHelper.certificateFromFile(keys.appleCaCert).get
+    } yield new PKSigningInformation(cert, key, appleCert)
 
-    new PKSigningInformation(cert, key, appleCert)
-  }
-
-  def validatePublicKey(config: Config, dryRun: Boolean): Either[PassCreationError, Success.type] = {
-    val localPublicKey = CryptoHelper.loadPEM(new File(config.keys.publicKey))
+  def validatePublicKey(config: Config, publicKeyFile: File, dryRun: Boolean): Either[PassCreationError, Success.type] = {
+    val localPublicKey = CryptoHelper.loadPEM(publicKeyFile)
 
     println(s"Checking public key is registered with server ${config.passSettings.server}…")
     Try(Http.get(config.passSettings.server + "v1/key/" + config.keys.keyIdentifier)) match {
@@ -97,7 +102,6 @@ class CreateCommand extends Callable[Int] {
                             |Details: ${exception.toString}""".stripMargin))
     }
   }
-
 }
 
 trait PassCreationError {
@@ -105,6 +109,8 @@ trait PassCreationError {
 }
 
 case class ConfigurationError(message: String)   extends PassCreationError
+case class FileNotFound(message: String)         extends PassCreationError
+case class KeyError(message: String)             extends PassCreationError
 case class ServerError(message: String)          extends PassCreationError
 case class CsvError(message: String)             extends PassCreationError
 case class PublicKeyNotOnServer(message: String) extends PassCreationError

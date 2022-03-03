@@ -1,12 +1,11 @@
 package com.passulo.util
 
-import com.passulo.StdOutText
+import com.passulo.cli.FileNotFound
 
-import java.io.{File, FileNotFoundException}
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths, StandardOpenOption}
-import scala.io.{BufferedSource, Source}
-import scala.util.{Success, Try}
+import scala.util.Success
 
 object FileOperations {
   def writeFile(filename: String, text: String, overwrite: Boolean): Either[String, Success.type] = {
@@ -25,12 +24,13 @@ object FileOperations {
     }
   }
 
-  def loadFile(filename: String): BufferedSource =
-    Try(Source.fromFile(filename)).orElse(Try(Source.fromResource(filename))).orElse(Try(Source.fromURL(filename))).getOrElse {
-      StdOutText.error(s"File not found.")
-      throw new FileNotFoundException(filename)
+  def loadFile(filename: String): Either[FileNotFound, File] = {
+    println(s"Trying to load file $filename")
+    val file = new File(filename)
+    if (file.exists() && file.canRead)
+      Right(file)
+    else {
+      Left(FileNotFound(s"File at ${file.getAbsolutePath} could not be found!"))
     }
-
-  def loadFile(file: File): BufferedSource =
-    Source.fromFile(file)
+  }
 }
