@@ -1,6 +1,7 @@
-import sbtassembly.AssemblyPlugin.defaultShellScript
+import sbtassembly.AssemblyPlugin.{defaultShellScript, defaultUniversalScript}
 
 ThisBuild / assemblyPrependShellScript := Some(defaultShellScript)
+//ThisBuild / assemblyPrependShellScript := Some(defaultUniversalScript(shebang = false)) // for windows
 
 lazy val root = (project in file("."))
   .settings(
@@ -24,6 +25,8 @@ lazy val root = (project in file("."))
     assembly / assemblyJarName := s"${name.value}-${git.gitDescribedVersion.value.getOrElse("0.0.0")}",
     assembly / assemblyMergeStrategy := {
       case PathList("META-INF", _*) => MergeStrategy.discard
+      case "reference.conf"         => MergeStrategy.concat
+      case "version.conf"           => MergeStrategy.concat
       case _                        => MergeStrategy.first
     }
   )
