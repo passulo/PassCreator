@@ -41,3 +41,9 @@ snapshots
 .scannerwork
 .bsp
 out
+AppleWWDRCAG4.cer
+keystore.p12
+members.csv
+passulo.conf
+private.pem
+public.pem

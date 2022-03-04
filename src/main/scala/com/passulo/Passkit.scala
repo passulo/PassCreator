@@ -15,9 +15,9 @@ object Passkit {
 
   def content(passInfo: PassInfo, passId: String, association: String): PKGenericPassBuilder =
     passInfo.template match {
-      case "thumb"                      => content_thumb(passInfo).backFields(backfields(passInfo, passId, association).asJava)
-      case "silver" | "gold" | "platin" => content_strip(passInfo).backFields(backfields(passInfo, passId, association).asJava)
-      case _                            => content_plain(passInfo).backFields(backfields(passInfo, passId, association).asJava)
+      case "thumb"                 => content_thumb(passInfo).backFields(backfields(passInfo, passId, association).asJava)
+      case other if !other.isBlank => content_strip(passInfo).backFields(backfields(passInfo, passId, association).asJava)
+      case _                       => content_plain(passInfo).backFields(backfields(passInfo, passId, association).asJava)
     }
 
   def backfields(passInfo: PassInfo, passId: String, association: String): Seq[PKField] =
