@@ -216,3 +216,22 @@ The token itself is defined as protobuf in https://github.com/passulo/Token. The
 The signature is created over the byte-encoded token from an Ed25519 private key that belongs to the association that issues the pass.
 
 The key-id can be used to download the public key of the issuer from the given domain. Use this public key to verify the signature.
+
+# Compiling from source and publishing
+
+For development, you can use
+
+```shell
+$ sbt stage && target/universal/stage/bin/pass-creator
+```
+
+to [compile everything](https://github.com/sbt/sbt-native-packager) into `bin` and `lib` folders and run it. Resources (keys, config) have to be placed into the directory you are _currently_ in.
+
+Publishing executables is done [via](https://github.com/sbt/sbt-assembly)
+
+```shell
+$ sbt assembly
+```
+
+and uses [sbt-git](https://github.com/sbt/sbt-git) to read the version from the latest tag.
+

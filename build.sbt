@@ -9,21 +9,26 @@ lazy val root = (project in file("."))
     organization         := "com.passulo",
     organizationName     := "Passulo",
     organizationHomepage := Some(url("https://www.passulo.com")),
+    homepage             := Some(url("https://www.passulo.com")),
     description          := "Program to create Passulo passes for a list of members",
     scmInfo              := Some(ScmInfo(url("https://github.com/passulo/PassCreator"), "git@github.com:passulo/PassCreator.git")),
     developers           := List(Developer("jannikarndt", "Jannik Arndt", "@jannikarndt", url("https://github.com/JannikArndt"))),
-    maintainer           := "mail@passulo.com",
-    version              := "1.0.0",
-    scalaVersion         := "2.13.8",
-    scalacOptions        := scalaCompilerOptions,
-    libraryDependencies ++= dependencies ++ jsonDependencies ++ testDependencies ++ akkaDependencies,
-    assembly / assemblyJarName := s"${name.value}-${version.value}",
+    licenses             := Seq(("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0"))),
+    maintainer           := "mail@passulo.com"
+  )
+  .settings(
+    scalaVersion               := "2.13.8",
+    scalacOptions              := scalaCompilerOptions,
+    libraryDependencies        := dependencies ++ jsonDependencies ++ testDependencies ++ akkaDependencies,
+    publish / skip             := true, // this is not a dependency
+    assembly / assemblyJarName := s"${name.value}-${git.gitDescribedVersion.value.getOrElse("0.0.0")}",
     assembly / assemblyMergeStrategy := {
       case PathList("META-INF", _*) => MergeStrategy.discard
       case _                        => MergeStrategy.first
     }
   )
-  .enablePlugins(JavaAppPackaging)
+  .settings(sbtGitSettings)
+  .enablePlugins(JavaAppPackaging, GitVersioning, GitBranchPrompt)
 
 lazy val dependencies = Seq(
   "de.brendamour"          % "jpasskit"           % "0.2.0",
@@ -96,4 +101,18 @@ lazy val scalaCompilerOptions = Seq(
   "-Ywarn-unused:privates",        // Warn if a private member is unused.
   "-Ywarn-value-discard",          // Warn when non-Unit expression results are unused.
   "-Xsource:3"                     // use Scala 3 syntax
+)
+
+lazy val sbtVersionRegex = "v([0-9]+.[0-9]+.[0-9]+)-?(.*)?".r
+
+lazy val sbtGitSettings = Seq(
+  git.useGitDescribe       := true,
+  git.baseVersion          := "0.0.0",
+  git.uncommittedSignifier := None,
+  git.gitTagToVersionNumber := {
+    case sbtVersionRegex(v, "")         => Some(v)
+    case sbtVersionRegex(v, "SNAPSHOT") => Some(s"$v-SNAPSHOT")
+    case sbtVersionRegex(v, s)          => Some(s"$v-$s-SNAPSHOT")
+    case _                              => None
+  }
 )
