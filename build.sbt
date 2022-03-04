@@ -1,3 +1,7 @@
+import sbtassembly.AssemblyPlugin.defaultShellScript
+
+ThisBuild / assemblyPrependShellScript := Some(defaultShellScript)
+
 lazy val root = (project in file("."))
   .settings(
     name                 := "PassCreator",
@@ -12,7 +16,12 @@ lazy val root = (project in file("."))
     version              := "1.0.0",
     scalaVersion         := "2.13.8",
     scalacOptions        := scalaCompilerOptions,
-    libraryDependencies ++= dependencies ++ jsonDependencies ++ testDependencies ++ akkaDependencies
+    libraryDependencies ++= dependencies ++ jsonDependencies ++ testDependencies ++ akkaDependencies,
+    assembly / assemblyJarName := s"${name.value}-${version.value}",
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", _*) => MergeStrategy.discard
+      case _                        => MergeStrategy.first
+    }
   )
   .enablePlugins(JavaAppPackaging)
 

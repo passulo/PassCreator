@@ -3,7 +3,7 @@ package com.passulo.cli
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.{`Content-Disposition`, ContentDispositionTypes}
+import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.model.{ContentType, ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
@@ -11,7 +11,7 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import com.passulo.*
 import com.passulo.cli.CreateCommand.{loadSigningInfo, validatePublicKey}
-import com.passulo.util.{CryptoHelper, FileOperations, NanoID}
+import com.passulo.util.{CryptoHelper, FileOperations}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport.*
 import io.circe.generic.auto.*
 import picocli.CommandLine.{Command, Option}
