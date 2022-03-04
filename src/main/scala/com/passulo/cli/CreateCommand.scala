@@ -22,7 +22,7 @@ class CreateCommand extends Callable[Int] {
 
   // noinspection VarCouldBeVal
   @Option(names = Array("-s", "--source"), description = Array("CSV files with members."), required = true)
-  var source: String = _
+  var source: File = _
 
   // noinspection VarCouldBeVal
   @Option(names = Array("-n", "--dry-run"), description = Array("Don't actually register the passes at the server."))
@@ -46,8 +46,9 @@ class CreateCommand extends Callable[Int] {
       signingInformation <- loadSigningInfo(config.keys)
       publicKeyFile      <- FileOperations.loadFile(config.keys.publicKey)
       _                  <- validatePublicKey(config, publicKeyFile, dryRun)
-      _                   = println(s"Loading Members from ${config.input.csv}")
-      members            <- PassInfo.readFromCsv(config.input.csv).leftMap[PassCreationError](e => CsvError(e.getMessage))
+      _                   = println(s"Loading Members from ${source.getAbsolutePath}")
+      members            <- PassInfo.readFromCsv(source).leftMap[PassCreationError](e => CsvError(e.getMessage))
+      _                   = println("Creating passes")
       results             = Passulo.createPasses(members, signingInformation, privateKey, config)
       _                   = ResultListEntry.write(results.toSeq, "out/_results.csv")
     } yield results

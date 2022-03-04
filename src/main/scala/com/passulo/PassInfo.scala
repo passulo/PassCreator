@@ -7,6 +7,7 @@ import kantan.csv.java8.*
 import kantan.csv.ops.toCsvInputOps
 import kantan.csv.{rfc, ReadResult}
 
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 
@@ -52,7 +53,7 @@ case class PassInfo(
 object PassInfo {
   def NoneIfEmpty(string: String): Option[String] = if (string.isBlank) None else Some(string)
 
-  def readFromCsv(file: String): ReadResult[Seq[PassInfo]] =
-    Thread.currentThread().getContextClassLoader.getResource(file).asCsvReader[PassInfo](rfc.withHeader).toSeq.sequence
+  def readFromCsv(file: File): ReadResult[Seq[PassInfo]] =
+    file.asCsvReader[PassInfo](rfc.withHeader).toSeq.sequence
 
 }

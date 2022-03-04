@@ -1,17 +1,17 @@
 package com.passulo
 
+import de.brendamour.jpasskit.*
 import de.brendamour.jpasskit.enums.PKDateStyle.*
 import de.brendamour.jpasskit.enums.{PKBarcodeFormat, PKPassType, PKTextAlignment}
 import de.brendamour.jpasskit.passes.{PKGenericPass, PKGenericPassBuilder}
-import de.brendamour.jpasskit.*
 
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.time.{LocalDate, ZoneId}
 import scala.jdk.CollectionConverters.*
 object Passkit {
+
   def IsoDateAtMidnightString(date: LocalDate): String = date.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant.toString
-  def ShortDateString(date: LocalDate): String         = date.toString
 
   def content(passInfo: PassInfo, passId: String, association: String): PKGenericPassBuilder =
     passInfo.template match {
@@ -20,68 +20,85 @@ object Passkit {
       case _                            => content_plain(passInfo).backFields(backfields(passInfo, passId, association).asJava)
     }
 
-  def backfields(passInfo: PassInfo, passId: String, association: String): Seq[PKField] = {
-    val memberSinceText = passInfo.memberSince.map(d => s"\nMitglied seit: ${ShortDateString(d)}").getOrElse("")
+  def backfields(passInfo: PassInfo, passId: String, association: String): Seq[PKField] =
     Seq(
-      PKField.builder().key("name").label("Ausgestellt an").value(passInfo.fullName).build(),
-      PKField.builder().key("company").label("Firma").value(passInfo.company).build(),
-      PKField.builder().key("association").value(s"Verband: $association\nMitgliedsnummer: ${passInfo.number}$memberSinceText").build(),
-      PKField.builder().key("passId").label("Pass").value(s"ID: $passId\nErstellt am ${ShortDateString(LocalDate.now())}").build()
-    )
-  }
+      field("name", "$ISSUED_TO", passInfo.fullName),
+      field("company", "$COMPANY", passInfo.company),
+      field("association", "$ASSOCIATION", association),
+      field("number", "$NUMBER", passInfo.number),
+      field_date("memberSince", "$MEMBER_SINCE", passInfo.memberSince),
+      field("passId", "$PASSID", passId),
+      field_date("createdAt", "$CREATED_AT", Some(LocalDate.now))
+    ).flatten
 
-  def content_plain(passInfo: PassInfo): PKGenericPassBuilder = {
-    val validFrom = passInfo.memberSince.map(IsoDateAtMidnightString)
-    val pass = PKGenericPass
+  def field(key: String, label: String, value: String, alignment: PKTextAlignment = PKTextAlignment.PKTextAlignmentLeft): Option[PKField] =
+    Some(PKField.builder().key(key).label(label).value(value).textAlignment(alignment).build())
+
+  def field_date(key: String, label: String, value: Option[LocalDate]): Option[PKField] =
+    value.map(date => PKField.builder().key(key).label(label).value(IsoDateAtMidnightString(date)).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
+
+  def content_plain(passInfo: PassInfo): PKGenericPassBuilder =
+    PKGenericPass
       .builder()
       .passType(PKPassType.PKGenericPass)
-      .headerField(
-        validFrom
-          .map(date => PKField.builder().key("validity").label("Gültig ab").value(date).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
-          .getOrElse(PKField.builder().build())
+      .headerFields(
+        Seq(field_date("validity", "$DATEFIELD", passInfo.memberSince)).flatten.asJava
       )
-      .primaryField(PKField.builder().key("name").value(passInfo.fullName).build())
-      .secondaryField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
-      .secondaryField(PKField.builder().key("number").label("Mitgliedsnummer").value(passInfo.number).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
-      .auxiliaryField(PKField.builder().key("status").label("status").value(passInfo.status).build())
+      .primaryFields(
+        Seq(field("name", "", passInfo.fullName)).flatten.asJava
+      )
+      .secondaryFields(
+        Seq(
+          field("company", "$COMPANY", passInfo.company),
+          field("number", "$NUMBER", passInfo.number, PKTextAlignment.PKTextAlignmentRight)
+        ).flatten.asJava
+      )
+      .auxiliaryFields(
+        Seq(
+          field("status", "$STATUS", passInfo.status),
+          field("role", "$ROLE", passInfo.role, PKTextAlignment.PKTextAlignmentRight)
+        ).flatten.asJava
+      )
 
-    if (!passInfo.role.isBlank)
-      pass.auxiliaryField(PKField.builder().key("role").label("Funktion").value(passInfo.role).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
-    else
-      pass
-  }
-
-  def content_strip(passInfo: PassInfo): PKGenericPassBuilder = {
-    val validFrom = passInfo.memberSince.map(IsoDateAtMidnightString)
+  def content_strip(passInfo: PassInfo): PKGenericPassBuilder =
     PKGenericPass
       .builder()
       .passType(PKPassType.PKStoreCard)
-      .headerField(
-        validFrom
-          .map(date => PKField.builder().key("validity").label("Gültig ab").value(date).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
-          .getOrElse(PKField.builder().build())
+      .headerFields(
+        Seq(field_date("validity", "$DATEFIELD", passInfo.memberSince)).flatten.asJava
       )
-      .primaryField(PKField.builder().key("name").value(passInfo.fullName).build())
-      .secondaryField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
-      .secondaryField(PKField.builder().key("number").label("Mitgliedsnummer").value(passInfo.number).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
-  }
+      .primaryFields(
+        Seq(field("name", "", passInfo.fullName)).flatten.asJava
+      )
+      .secondaryFields(
+        Seq(
+          field("company", "$COMPANY", passInfo.company),
+          field("number", "$NUMBER", passInfo.number, PKTextAlignment.PKTextAlignmentRight)
+        ).flatten.asJava
+      )
 
-  def content_thumb(passInfo: PassInfo): PKGenericPassBuilder = {
-    val validFrom = passInfo.memberSince.map(IsoDateAtMidnightString)
+  def content_thumb(passInfo: PassInfo): PKGenericPassBuilder =
     PKGenericPass
       .builder()
       .passType(PKPassType.PKGenericPass)
-      .headerField(PKField.builder().key("status").label("Status").value(passInfo.status).build())
-      .primaryField(PKField.builder().key("name").value(passInfo.fullName).build())
-      .secondaryField(PKField.builder().key("company").label("Firma").value(passInfo.company).build())
-      .secondaryField(PKField.builder().key("number").label("Mitgliedsnummer").value(passInfo.number).textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
-      .auxiliaryField(
-        validFrom
-          .map(date => PKField.builder().key("validity").label("Gültig ab").value(date).dateStyle(PKDateStyleShort).timeStyle(PKDateStyleNone).build())
-          .getOrElse(PKField.builder().build())
+      .headerFields(
+        Seq(field("status", "$STATUS", passInfo.status)).flatten.asJava
       )
-      .auxiliaryField(PKField.builder().key("function").label("Funktion").value("Kassenwart").textAlignment(PKTextAlignment.PKTextAlignmentRight).build())
-  }
+      .primaryFields(
+        Seq(field("name", "", passInfo.fullName)).flatten.asJava
+      )
+      .secondaryFields(
+        Seq(
+          field("company", "$COMPANY", passInfo.company),
+          field("number", "$NUMBER", passInfo.number, PKTextAlignment.PKTextAlignmentRight)
+        ).flatten.asJava
+      )
+      .auxiliaryFields(
+        Seq(
+          field_date("validity", "$DATEFIELD", passInfo.memberSince),
+          field("role", "$ROLE", passInfo.role, PKTextAlignment.PKTextAlignmentRight)
+        ).flatten.asJava
+      )
 
   def barcode(qrCodeContent: String): PKBarcodeBuilder =
     PKBarcode
@@ -110,7 +127,7 @@ object Passkit {
     .serialNumber(passInfo.number)
     .teamIdentifier(config.passSettings.team)
     .organizationName(config.passSettings.associationName)
-    .description("$DESCRIPTION") // TODO i18n
+    .description(config.passSettings.associationName)
     .backgroundColor(config.colors.backgroundColor)
     .foregroundColor(config.colors.foregroundColor)
     .labelColor(config.colors.labelColor)
