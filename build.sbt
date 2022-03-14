@@ -39,7 +39,7 @@ lazy val dependencies = Seq(
   "com.nrinaudo"          %% "kantan.csv"         % "0.6.2",
   "com.nrinaudo"          %% "kantan.csv-java8"   % "0.6.2",
   "com.nrinaudo"          %% "kantan.csv-generic" % "0.6.2",
-  "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.9",
+  "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.10",
   "info.picocli"           % "picocli"            % "4.6.3"
 )
 
