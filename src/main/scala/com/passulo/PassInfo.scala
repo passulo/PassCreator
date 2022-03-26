@@ -5,7 +5,7 @@ import com.passulo.PassInfo.NoneIfEmpty
 import kantan.csv.generic.*
 import kantan.csv.java8.*
 import kantan.csv.ops.toCsvInputOps
-import kantan.csv.{rfc, ReadResult}
+import kantan.csv.{ReadResult, rfc}
 
 import java.io.File
 import java.nio.charset.StandardCharsets

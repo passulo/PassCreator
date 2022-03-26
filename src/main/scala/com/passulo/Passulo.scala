@@ -6,13 +6,14 @@ import com.passulo.util.{CryptoHelper, Http, NanoID}
 import de.brendamour.jpasskit.signing.PKSigningInformation
 import io.circe.generic.auto.*
 import io.circe.syntax.*
+import pureconfig.ConfigSource
+import pureconfig.generic.auto.*
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.security.PrivateKey
 import java.time.{LocalTime, ZoneOffset}
 import java.util.Base64
-
 object Passulo {
   case class SignedPassId(passId: String, keyId: String, signature: String)
 
@@ -30,7 +31,9 @@ object Passulo {
   def createPass(member: PassInfo, passId: String, signingInformation: PKSigningInformation, privateKey: PrivateKey, config: Config): Array[Byte] = {
     println(s"Creating pass for: ${member.fullName} (id=$passId) with template '${member.templateFolder}'…")
     val qrCodeContent                = Passulo.createUrl(member, passId, privateKey, config.keys.keyIdentifier, config.passSettings)
-    val pass                         = Passkit.pass(member, passId, qrCodeContent, config)
+    val styleFile                    = "templates/" + member.templateFolder + "/style.conf"
+    val style                        = ConfigSource.file(styleFile).load[Style].getOrElse(throw new RuntimeException(s"Fiel $styleFile not found!"))
+    val pass                         = Passkit.pass(member, passId, qrCodeContent, config, style)
     val templateFolder               = Paths.get(s"templates/${member.templateFolder}/").toAbsolutePath.toString
     val signedAndZippedPkPassArchive = Passkit4S.createSignedAndZippedPkPassArchive(pass, templateFolder, signingInformation)
     signedAndZippedPkPassArchive

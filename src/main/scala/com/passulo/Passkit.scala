@@ -13,14 +13,14 @@ object Passkit {
 
   def IsoDateAtMidnightString(date: LocalDate): String = date.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant.toString
 
-  def content(passInfo: PassInfo, passId: String, association: String): PKGenericPassBuilder =
-    passInfo.template match {
-      case "thumb"                 => content_thumb(passInfo).backFields(backfields(passInfo, passId, association).asJava)
-      case other if !other.isBlank => content_strip(passInfo).backFields(backfields(passInfo, passId, association).asJava)
-      case _                       => content_plain(passInfo).backFields(backfields(passInfo, passId, association).asJava)
+  def content(passInfo: PassInfo, passId: String, association: String, qrCodeContent: String, format: String): PKGenericPassBuilder =
+    format match {
+      case "thumb"                 => content_thumb(passInfo).backFields(backfields(passInfo, passId, qrCodeContent, association).asJava)
+      case "strip"                 => content_strip(passInfo).backFields(backfields(passInfo, passId, qrCodeContent, association).asJava)
+      case "plain" | "default" | _ => content_plain(passInfo).backFields(backfields(passInfo, passId, qrCodeContent, association).asJava)
     }
 
-  def backfields(passInfo: PassInfo, passId: String, association: String): Seq[PKField] =
+  def backfields(passInfo: PassInfo, passId: String, qrCodeContent: String, association: String): Seq[PKField] =
     Seq(
       field("name", "$ISSUED_TO", passInfo.fullName),
       field("company", "$COMPANY", passInfo.company),
@@ -28,6 +28,7 @@ object Passkit {
       field("number", "$NUMBER", passInfo.number),
       field_date("memberSince", "$MEMBER_SINCE", passInfo.memberSince),
       field("passId", "$PASSID", passId),
+      field("verifyLink", "$VERIFY_LINK", qrCodeContent),
       field_date("createdAt", "$CREATED_AT", Some(LocalDate.now))
     ).flatten
 
@@ -117,20 +118,20 @@ object Passkit {
         .build()
     }
 
-  def pass(passInfo: PassInfo, passId: String, qrCodeContent: String, config: Config): PKPass = PKPass
+  def pass(passInfo: PassInfo, passId: String, qrCodeContent: String, config: Config, style: Style): PKPass = PKPass
     .builder()
-    .pass(content(passInfo, passId, config.passSettings.associationName))
+    .pass(content(passInfo, passId, config.passSettings.associationName, qrCodeContent, style.format))
     .barcodeBuilder(barcode(qrCodeContent))
-    .beacons(beacons(config.beacons).asJava)
+    .beacons(beacons(style.beacons).asJava)
     .formatVersion(1)
     .passTypeIdentifier(config.passSettings.identifier)
     .serialNumber(passInfo.number)
     .teamIdentifier(config.passSettings.team)
     .organizationName(config.passSettings.associationName)
     .description(config.passSettings.associationName)
-    .backgroundColor(config.colors.backgroundColor)
-    .foregroundColor(config.colors.foregroundColor)
-    .labelColor(config.colors.labelColor)
+    .backgroundColor(style.colors.backgroundColor)
+    .foregroundColor(style.colors.foregroundColor)
+    .labelColor(style.colors.labelColor)
     .webServiceURL(new URL(config.passSettings.server + "passes/"))
     .authenticationToken("vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc") // min 16 chars
     .appLaunchURL("passulo://")

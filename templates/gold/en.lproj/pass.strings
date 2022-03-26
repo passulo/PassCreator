@@ -1,1 +1,12 @@
-"$DESCRIPTION" = "Hamburg@Work Membership";
+"$DESCRIPTION" = "Passulo Membership Card";
+"$COMPANY" = "Company";
+"$STATUS" = "Status";
+"$NUMBER" = "Number";
+"$DATEFIELD" = "Valid from";
+"$ROLE" = "Role";
+"$ISSUED_TO" = "Issued to";
+"$ASSOCIATION" = "Association";
+"$PASSID" = "Pass ID";
+"$CREATED_AT" = "Issued on";
+"$MEMBER_SINCE" = "Member since";
+"$VERIFY_LINK" = "Check validity";

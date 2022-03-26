@@ -1,1 +1,12 @@
-"$DESCRIPTION" = "Mitgliedschaft bei Hamburg@Work";
+"$DESCRIPTION" = "Passulo Mitgliedsausweis";
+"$COMPANY" = "Firma";
+"$STATUS" = "Status";
+"$NUMBER" = "Mitgliedsnummer";
+"$DATEFIELD" = "Gültig ab";
+"$ROLE" = "Funktion";
+"$ISSUED_TO" = "Ausgestellt an";
+"$ASSOCIATION" = "Verband";
+"$PASSID" = "Pass ID";
+"$CREATED_AT" = "Erstellt am";
+"$MEMBER_SINCE" = "Mitglied seit";
+"$VERIFY_LINK" = "Gültigkeit überprüfen";
