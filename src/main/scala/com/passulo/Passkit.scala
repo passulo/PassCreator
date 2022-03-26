@@ -134,7 +134,7 @@ object Passkit {
     .webServiceURL(new URL(config.passSettings.server + "passes/"))
     .authenticationToken("vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc") // min 16 chars
     .appLaunchURL("passulo://")
-    .associatedStoreIdentifier(1609117532)
+    .associatedStoreIdentifier(1610341734)
 //    .associatedApps() // for PassWallet on Android
     .voided(false)
     .build()
