@@ -32,7 +32,7 @@ class PassCreator {}
 
 object PassCreator {
   def main(args: Array[String]): Unit = {
-    new CommandLine(new PassCreator()).execute(args*)
+    new CommandLine(new PassCreator).execute(args*)
     ()
   }
 }
