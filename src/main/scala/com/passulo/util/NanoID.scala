@@ -19,7 +19,7 @@ object NanoID {
   private val mask: Int = (2 << Math.floor(Math.log((alphabet.length - 1).toDouble) / Math.log(2)).toInt) - 1
 
   def create(length: Int = 8): String = {
-    val rand  = new SecureRandom()
+    val rand  = new SecureRandom
     val bytes = new Array[Byte](length)
     rand.nextBytes(bytes)
 
