@@ -36,9 +36,9 @@ lazy val root = (project in file("."))
 lazy val dependencies = Seq(
   "de.brendamour"          % "jpasskit"           % "0.2.0",
   "com.github.pureconfig" %% "pureconfig"         % "0.17.1",
-  "com.nrinaudo"          %% "kantan.csv"         % "0.6.2",
-  "com.nrinaudo"          %% "kantan.csv-java8"   % "0.6.2",
-  "com.nrinaudo"          %% "kantan.csv-generic" % "0.6.2",
+  "com.nrinaudo"          %% "kantan.csv"         % "0.7.0",
+  "com.nrinaudo"          %% "kantan.csv-java8"   % "0.7.0",
+  "com.nrinaudo"          %% "kantan.csv-generic" % "0.7.0",
   "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.11",
   "info.picocli"           % "picocli"            % "4.6.3"
 )
@@ -53,7 +53,7 @@ lazy val jsonDependencies = Seq(
 )
 
 val akkaVersion     = "2.6.19"
-val akkaHttpVersion = "10.2.9"
+val akkaHttpVersion = "10.2.10"
 
 lazy val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
