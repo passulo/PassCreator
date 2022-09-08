@@ -52,7 +52,7 @@ lazy val jsonDependencies = Seq(
   "de.heikoseeberger" %% "akka-http-circe" % "1.39.2"
 )
 
-val akkaVersion     = "2.6.20"
+val akkaVersion     = "2.6.19"
 val akkaHttpVersion = "10.2.9"
 
 lazy val akkaDependencies = Seq(
