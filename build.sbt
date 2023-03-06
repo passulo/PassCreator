@@ -43,7 +43,7 @@ lazy val dependencies = Seq(
   "info.picocli"           % "picocli"            % "4.7.1"
 )
 
-val circeVersion = "0.14.4"
+val circeVersion = "0.14.5"
 
 lazy val jsonDependencies = Seq(
   "io.circe"          %% "circe-core"      % circeVersion,
