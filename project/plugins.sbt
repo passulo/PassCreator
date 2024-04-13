@@ -6,7 +6,7 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.10.0")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
 
 // $ sbt stage
-addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.16")
+addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.10.0")
 // $ sbt assembly
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.2.0")
 
