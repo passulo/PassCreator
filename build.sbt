@@ -34,7 +34,7 @@ lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging, GitVersioning, GitBranchPrompt)
 
 lazy val dependencies = Seq(
-  "de.brendamour"          % "jpasskit"           % "0.4.0",
+  "de.brendamour"          % "jpasskit"           % "0.4.2",
   "com.github.pureconfig" %% "pureconfig"         % "0.17.6",
   "com.nrinaudo"          %% "kantan.csv"         % "0.7.0",
   "com.nrinaudo"          %% "kantan.csv-java8"   % "0.7.0",
