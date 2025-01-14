@@ -3,7 +3,7 @@
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.10.0")
 
 // $ sbt scalafmtAll
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.3")
 
 // $ sbt stage
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.0")
