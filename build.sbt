@@ -36,9 +36,9 @@ lazy val root = (project in file("."))
 lazy val dependencies = Seq(
   "de.brendamour"          % "jpasskit"           % "0.4.2",
   "com.github.pureconfig" %% "pureconfig"         % "0.17.8",
-  "com.nrinaudo"          %% "kantan.csv"         % "0.7.0",
-  "com.nrinaudo"          %% "kantan.csv-java8"   % "0.7.0",
-  "com.nrinaudo"          %% "kantan.csv-generic" % "0.7.0",
+  "com.nrinaudo"          %% "kantan.csv"         % "0.8.0",
+  "com.nrinaudo"          %% "kantan.csv-java8"   % "0.8.0",
+  "com.nrinaudo"          %% "kantan.csv-generic" % "0.8.0",
   "com.thesamet.scalapb"  %% "scalapb-runtime"    % "0.11.13",
   "info.picocli"           % "picocli"            % "4.7.6"
 )
