@@ -11,7 +11,7 @@ jobs:
         with:
           java-version: '17'
       - name: Cache SBT & ivy cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.ivy2/cache
@@ -30,7 +30,7 @@ jobs:
         with:
           java-version: '17'
       - name: Cache SBT & ivy cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.ivy2/cache
